@@ -1,49 +1,62 @@
 import Phaser from 'phaser';
-import { TILESETS, MAPS } from '../constants/assetsKeys';
-import { IMAGES } from '../constants/assetsKeys';
+import {
+    TILESETS,
+    MAPS,
+    ASEPRITES
+} from '../constants/assetsKeys';
 
 export default class PreloaderScene extends Phaser.Scene {
+
     constructor() {
         super('Preloader');
     }
 
     preload() {
 
+        // =========================
+        // TILESETS
+        // =========================
+
         TILESETS.forEach(asset => {
+
             this.load.image(
                 asset.key,
                 asset.path
             );
-        });
-        
-        IMAGES.forEach(asset => {
-            if (asset.spritesheet) {
-                this.load.spritesheet(
-                    asset.key,
-                    asset.path,
-                    {
-                        frameWidth: asset.frameWidth,
-                        frameHeight: asset.frameHeight
-                    }
-                );
-            } else {
-                this.load.image(
-                    asset.key,
-                    asset.path
-                );
-            }
+
         });
 
+        // =========================
+        // ASEPRITE ANIMATIONS
+        // =========================
+
+        ASEPRITES.forEach(asset => {
+
+            this.load.atlas(
+                asset.key,
+                asset.textureURL,
+                asset.atlasURL
+            );
+
+        });
+
+        // =========================
+        // MAPS
+        // =========================
 
         MAPS.forEach(map => {
+
             this.load.tilemapTiledJSON(
                 map.key,
                 map.path
             );
+
         });
     }
 
     create() {
+
         this.scene.start('Game');
+
     }
 }

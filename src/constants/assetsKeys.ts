@@ -1,13 +1,11 @@
-export const IMAGES = [
+
+export const ASEPRITES = [
     {
         key: 'player',
-        path: 'units/black/warrior/Warrior_Idle.png',
-        frameWidth: 32,
-        frameHeight: 32,
-        spritesheet: true
+        textureURL: 'units/warrior/Warrior.png',
+        atlasURL: 'units/warrior/Warrior.json'
     }
 ];
-
 
 export const TILESETS = [
     {

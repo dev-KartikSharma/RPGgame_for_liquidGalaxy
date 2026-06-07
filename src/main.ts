@@ -9,12 +9,26 @@ new Phaser.Game({
     width: 1280,
     height: 720,
 
+    parent: 'game-container',
+
     pixelArt: true,
+    
+    render: {
+        pixelArt: true,
+        antialias: false,
+        roundPixels: true
+    },
+
+
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+    },
 
     physics: {
         default: 'arcade',
         arcade: {
-            debug: true
+            debug: false,
         }
     },
 
@@ -22,5 +36,4 @@ new Phaser.Game({
         Preloader,
         Game
     ]
-
 });

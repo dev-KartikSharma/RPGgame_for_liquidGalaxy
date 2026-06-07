@@ -1,16 +1,36 @@
 import Phaser from 'phaser';
 import { TILESETS } from '../constants/assetsKeys';
+import { createPlayerAnimations } from '../animations/playeranimation';
+
 
 export default class MainScene extends Phaser.Scene {
 
     private player!: Phaser.Physics.Arcade.Sprite;
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+    private attackKey!: Phaser.Input.Keyboard.Key;
+    private guardKey!: Phaser.Input.Keyboard.Key;
 
     constructor() {
         super('Game');
     }
 
     create() {
+
+        // =========================
+        // ANIMATIONS
+        // =========================
+
+        createPlayerAnimations(this);
+        // this.player.play('Idle');
+        console.log(
+            'Idle Animation Exists:',
+            this.anims.exists('Idle')
+        );
+
+        console.log(
+            'Run Animation Exists:',
+            this.anims.exists('Run')
+        );
 
         // =========================
         // MAP
@@ -34,9 +54,7 @@ export default class MainScene extends Phaser.Scene {
             map.heightInPixels
         );
 
-        // =========================
         // TILESETS
-        // =========================
 
         const registeredTilesets: Phaser.Tilemaps.Tileset[] = [];
 
@@ -52,9 +70,7 @@ export default class MainScene extends Phaser.Scene {
             }
         }
 
-        // =========================
         // TILE LAYERS
-        // =========================
 
         const createdLayers: Phaser.Tilemaps.TilemapLayer[] = [];
 
@@ -93,29 +109,31 @@ export default class MainScene extends Phaser.Scene {
             }
         });
 
-        // =========================
+
         // PLAYER
-        // =========================
 
         this.player = this.physics.add.sprite(
             map.widthInPixels / 2,
             map.heightInPixels / 2,
             'player'
         );
+        this.player.setSize(48, 48);
+        
+
+        this.player.setScale(0.45);
+    
 
         this.player.setCollideWorldBounds(true);
 
-        console.log(
-            'Player Position:',
-            this.player.x,
-            this.player.y
-        );
+        // Idle animation (playing manually)
+        this.player.play('Idle');
 
-        console.log(
-            'Player Size:',
-            this.player.width,
-            this.player.height
-        );
+        // console.log(
+        //     'Player Position:',
+        //     this.player.x,
+        //     this.player.y
+        // );
+
 
         // =========================
         // TILE COLLISIONS
@@ -130,10 +148,11 @@ export default class MainScene extends Phaser.Scene {
             this.physics.add.collider(
                 this.player,
                 waterLayer
-                );
+            );
 
             console.log('Water Layer Collision Enabled');
         }
+
 
         // =========================
         // OBJECT COLLISIONS
@@ -171,8 +190,6 @@ export default class MainScene extends Phaser.Scene {
             walls.add(wall);
         });
 
-        // Player ↔ Object Collision
-
         this.physics.add.collider(
             this.player,
             walls
@@ -195,6 +212,7 @@ export default class MainScene extends Phaser.Scene {
             map.widthInPixels,
             map.heightInPixels
         );
+        
 
         // =========================
         // CAMERA
@@ -212,33 +230,171 @@ export default class MainScene extends Phaser.Scene {
             true
         );
 
-        this.cameras.main.setZoom(0.5);
+        this.cameras.main.setZoom(1.5);
 
         // =========================
         // INPUT
         // =========================
 
         this.cursors = this.input.keyboard!.createCursorKeys();
+        this.attackKey = this.input.keyboard!.addKey(
+            Phaser.Input.Keyboard.KeyCodes.SPACE
+        );
+        console.log(this.attackKey);
+        this.guardKey = this.input.keyboard!.addKey(
+            Phaser.Input.Keyboard.KeyCodes.SHIFT
+        );
+        console.log(this.guardKey);
     }
 
     update() {
 
         const speed = 200;
 
+        const currentAnim =
+            this.player.anims.currentAnim?.key;
+
+        // =========================
+        // IF ATTACK IS PLAYING
+        // DON'T INTERRUPT IT
+        // =========================
+
+        if (
+            currentAnim === 'Attack 1' ||
+            currentAnim === 'Attack 2'
+        ) {
+
+            if (
+                !this.player.anims.isPlaying
+            ) {
+
+                this.player.play(
+                    'Idle',
+                    true
+                );
+
+            }
+
+            return;
+        }
+
+        // =========================
+        // ATTACK
+        // =========================
+
+        if (
+            Phaser.Input.Keyboard.JustDown(
+                this.attackKey
+            )
+        ) {
+
+            this.player.setVelocity(0);
+
+            const attack =
+                Math.random() < 0.5
+                    ? 'Attack 1'
+                    : 'Attack 2';
+
+            console.log(
+                'Playing:',
+                attack
+            );
+
+            this.player.play(
+                attack,
+                true
+            );
+
+            return;
+        }
+
+        // =========================
+        // GUARD
+        // =========================
+
+        if (this.guardKey.isDown) {
+
+            this.player.setVelocity(0);
+
+            if (
+                currentAnim !== 'Guard'
+            ) {
+
+                this.player.play(
+                    'Guard',
+                    true
+                );
+
+            }
+
+            return;
+        }
+
+        // =========================
+        // MOVEMENT
+        // =========================
+
+        let moving = false;
+
         this.player.setVelocity(0);
 
         if (this.cursors.left.isDown) {
+
             this.player.setVelocityX(-speed);
+            moving = true;
+
         }
         else if (this.cursors.right.isDown) {
+
             this.player.setVelocityX(speed);
+            moving = true;
+
         }
 
         if (this.cursors.up.isDown) {
+
             this.player.setVelocityY(-speed);
+            moving = true;
+
         }
         else if (this.cursors.down.isDown) {
+
             this.player.setVelocityY(speed);
+            moving = true;
+
+        }
+
+        // =========================
+        // RUN / IDLE
+        // =========================
+
+        if (moving) {
+
+            if (
+                currentAnim !== 'Run'
+            ) {
+
+                this.player.play(
+                    'Run',
+                    true
+                );
+
+            }
+
+        }
+        else {
+
+            if (
+                currentAnim !== 'Idle'
+            ) {
+
+                this.player.play(
+                    'Idle',
+                    true
+                );
+
+            }
+
         }
     }
 }
