@@ -8,12 +8,45 @@ export const ASEPRITES = [
 ];
 
 export const TILESETS = [
+    //Terrain/Bridge/
+    {
+        tiledName: 'bridge',
+        key: 'bridge',
+        path: 'terrain/Bridge/Bridge_All.png'
+    },
+
+    //Terrain/deco/
+    //Bushes
+    {
+        tiledName: 'bush1',
+        key: 'bush1',
+
+    },
+
+    //Terrain/Ground/
+    {
+        tiledName: 'shadow2',
+        key: 'shadow2',
+        path: 'terrain/Ground/Shadows.png'
+    },
+    {
+        tiledName: 'elevatedGround',
+        key: 'elevatedGround',
+        path: 'terrain/Ground/Tilemap_Elevation.png'
+
+    },
+    {
+        tiledName: 'flatGround',
+        key: 'flatGround',
+        path: 'terrain/Ground/Tilemap_Flat.png'
+    },
+
+    //
     {
         tiledName: 'water',
         key: 'water',
         path: 'terrain/tileset/Water Background color.png'
     },
-    // Terrain/tileset
     {
         tiledName: 'ground1',
         key: 'grass1',
@@ -76,7 +109,8 @@ export const TILESETS = [
         key: 'barracks',
         path: 'buildings/blue/Barracks.png'
     },
-    {   tiledName: 'monastery',
+    {
+        tiledName: 'monastery',
         key: 'monastery',
         path: 'buildings/blue/Monastery.png'
     },
@@ -100,7 +134,7 @@ export const TILESETS = [
         path: 'Trees/Tree.png'
     },
 
-    
+
 ];
 
 export const MAPS = [
