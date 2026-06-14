@@ -22,13 +22,15 @@ new Phaser.Game({
 
     scale: {
         mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        
     },
 
     physics: {
-        default: 'arcade',
-        arcade: {
-            debug: false,
+        default: 'matter',
+        matter: {
+            debug: true,
+            gravity: { x: 0, y: 0 }
         }
     },
 
