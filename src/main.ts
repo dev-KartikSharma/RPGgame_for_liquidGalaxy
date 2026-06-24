@@ -1,6 +1,9 @@
 import Phaser from 'phaser';
 import Preloader from './scenes/preloader';
+import MainMenuScene from './scenes/MainMenuScene';
 import Game from './scenes/game';
+import UIScene from './scenes/UIScene';
+import PauseMenuScene from './scenes/PauseMenuScene';
 
 new Phaser.Game({
 
@@ -16,26 +19,37 @@ new Phaser.Game({
     render: {
         pixelArt: true,
         antialias: false,
-        roundPixels: true
+        roundPixels: true,
+        powerPreference: 'high-performance', // Request dedicated GPU
+        batchSize: 4096 // Optimize WebGL draw calls
     },
 
+    fps: {
+        target: 60,
+        forceSetTimeOut: true // Prevents browsers from killing requestAnimationFrame when VMs lose focus
+    },
 
     scale: {
-        mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH,
-        
+        mode: Phaser.Scale.RESIZE,
+        min: {
+            width: 800,
+            height: 600
+        }
     },
 
     physics: {
         default: 'matter',
         matter: {
-            debug: true,
+            debug: false,
             gravity: { x: 0, y: 0 }
         }
     },
 
     scene: [
         Preloader,
-        Game
+        MainMenuScene,
+        Game,
+        UIScene,
+        PauseMenuScene
     ]
 });

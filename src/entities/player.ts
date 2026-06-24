@@ -1,25 +1,27 @@
 import Phaser from 'phaser';
+import { events } from '../managers/EventManager';
 
 export class Player extends Phaser.Physics.Matter.Sprite {
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
+    private wasd: any;
     private attackKey: Phaser.Input.Keyboard.Key;
     private guardKey: Phaser.Input.Keyboard.Key;
 
     // Stats Placeholders
     public maxHealth: number = 100;
     public health: number = 100;
-    public maxStamina: number = 100;
-    public stamina: number = 100;
-    public maxMana: number = 100;
-    public mana: number = 100;
+    private maxMana: number = 100;
+    private mana: number = 100;
+    private lastManaRegenTime: number = 0;
+    public isDead: boolean = false;
 
-    constructor(scene: Phaser.Scene, x: number, y: number) {
-        super(scene.matter.world, x, y, 'player');
+    constructor(scene: Phaser.Scene, x: number, y: number, texture: string, frame?: string | number) {
+        super(scene.matter.world, x, y, texture, frame);
 
         scene.add.existing(this);
 
         this.setScale(0.5);
-        this.setRectangle(40, 40);
+        this.setRectangle(20, 20);
         this.setFixedRotation();
         this.setFriction(0);
         this.setFrictionAir(0);
@@ -29,20 +31,34 @@ export class Player extends Phaser.Physics.Matter.Sprite {
 
         // Input setup
         this.cursors = scene.input.keyboard!.createCursorKeys();
+        this.wasd = scene.input.keyboard!.addKeys('W,A,S,D');
         this.attackKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         this.guardKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+
+        // Initialize UI values
+        events.emit('player-health-changed', this.health, this.maxHealth);
+        events.emit('player-mana-changed', this.mana, this.maxMana);
     }
 
-    update() {
+    update(time: number) {
         if ((this as any).isLGSlave) {
             // Slaves are controlled by the master screen via socket
             return;
         }
 
+        // Mana regeneration
+        if (time > this.lastManaRegenTime + 1000) {
+            if (this.mana < this.maxMana) {
+                this.mana = Math.min(this.mana + 5, this.maxMana);
+                events.emit('player-mana-changed', this.mana, this.maxMana);
+            }
+            this.lastManaRegenTime = time;
+        }
+
         const speed = 3;
         const currentAnim = this.anims.currentAnim?.key;
 
-        // If attack is playing, don't interrupt it
+        // If attack is playing no interruption
         if (currentAnim === 'Attack 1' || currentAnim === 'Attack 2') {
             if (!this.anims.isPlaying) {
                 this.play('Idle', true);
@@ -55,6 +71,9 @@ export class Player extends Phaser.Physics.Matter.Sprite {
             this.setVelocity(0);
             const attack = Math.random() < 0.5 ? 'Attack 1' : 'Attack 2';
             this.play(attack, true);
+            
+            // Deal damage at the start of attack for simplicity
+            events.emit('player-attack', this);
             return;
         }
 
@@ -68,24 +87,44 @@ export class Player extends Phaser.Physics.Matter.Sprite {
         }
 
         // Movement
-        let moving = false;
         let vx = 0;
         let vy = 0;
 
-        if (this.cursors.left.isDown) {
-            vx = -speed;
-            moving = true;
-        } else if (this.cursors.right.isDown) {
-            vx = speed;
-            moving = true;
+        const leftDown = this.cursors.left.isDown || this.wasd.A.isDown;
+        const rightDown = this.cursors.right.isDown || this.wasd.D.isDown;
+        const upDown = this.cursors.up.isDown || this.wasd.W.isDown;
+        const downDown = this.cursors.down.isDown || this.wasd.S.isDown;
+
+        // Debug key to test UI
+        if (Phaser.Input.Keyboard.JustDown(this.scene.input.keyboard!.addKey('X'))) {
+            this.takeDamage(10);
         }
 
-        if (this.cursors.up.isDown) {
-            vy = -speed;
+        // Debug key to test Dialog
+        if (Phaser.Input.Keyboard.JustDown(this.scene.input.keyboard!.addKey('C'))) {
+            events.emit('show-dialog', "Hello there, traveler! Welcome to the RPG Game. This is a very long text to demonstrate the typewriter effect in the DialogBox.");
+        }
+
+        if (leftDown) {
+            vx = -1;
+            this.setFlipX(true);
+        } else if (rightDown) {
+            vx = 1;
+            this.setFlipX(false);
+        }
+
+        if (upDown) {
+            vy = -1;
+        } else if (downDown) {
+            vy = 1;
+        }
+
+        let moving = false;
+        if (vx !== 0 || vy !== 0) {
             moving = true;
-        } else if (this.cursors.down.isDown) {
-            vy = speed;
-            moving = true;
+            const length = Math.sqrt(vx * vx + vy * vy);
+            vx = (vx / length) * speed;
+            vy = (vy / length) * speed;
         }
 
         this.setVelocity(vx, vy);
@@ -100,5 +139,32 @@ export class Player extends Phaser.Physics.Matter.Sprite {
                 this.play('Idle', true);
             }
         }
+    }
+
+    takeDamage(amount: number) {
+        if (this.isDead) return;
+        
+        // If the player is currently guarding, block the damage!
+        if (this.anims.currentAnim?.key === 'Guard') {
+            // We could play a block sound or visual effect here
+            return;
+        }
+        
+        this.health -= amount;
+        events.emit('player-health-changed', this.health, this.maxHealth);
+
+        if (this.health <= 0) {
+            this.isDead = true;
+            // Handle death logic here if needed
+        }
+    }
+
+    consumeMana(amount: number): boolean {
+        if (this.mana >= amount) {
+            this.mana -= amount;
+            events.emit('player-mana-changed', this.mana, this.maxMana);
+            return true;
+        }
+        return false;
     }
 }

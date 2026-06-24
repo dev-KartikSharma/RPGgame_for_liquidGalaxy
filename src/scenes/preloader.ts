@@ -2,7 +2,8 @@ import Phaser from 'phaser';
 import {
     TILESETS,
     MAPS,
-    ASEPRITES
+    ASEPRITES,
+    UI_ASSETS
 } from '../constants/assetsKeys';
 
 export default class PreloaderScene extends Phaser.Scene {
@@ -52,11 +53,24 @@ export default class PreloaderScene extends Phaser.Scene {
             );
 
         });
+
+        // =========================
+        // UI ASSETS
+        // =========================
+        this.load.tilemapTiledJSON('ui_map', 'maps/ui_map.json');
+        this.load.tilemapTiledJSON('PauseMenu', 'maps/PauseMenu.json');
+
+        UI_ASSETS.forEach(asset => {
+            this.load.image(
+                asset.key,
+                asset.path
+            );
+        });
     }
 
     create() {
 
-        this.scene.start('Game');
+        this.scene.start('MainMenuScene');
 
     }
 }

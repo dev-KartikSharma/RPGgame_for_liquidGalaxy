@@ -5,9 +5,11 @@ export class MapManager {
     public map: Phaser.Tilemaps.Tilemap;
     public createdLayers: Phaser.Tilemaps.TilemapLayer[] = [];
     private scene: Phaser.Scene;
+    private isMaster: boolean;
 
-    constructor(scene: Phaser.Scene) {
+    constructor(scene: Phaser.Scene, isMaster: boolean = true) {
         this.scene = scene;
+        this.isMaster = isMaster;
         this.map = this.scene.make.tilemap({ key: 'map' });
     }
 
@@ -33,10 +35,13 @@ export class MapManager {
             if (tileLayer instanceof Phaser.Tilemaps.TilemapLayer) {
                 this.createdLayers.push(tileLayer);
 
-                // Skip the water layer — it fills the entire map with
-                // collides:true tiles. Water boundaries are handled
-                // separately below with invisible rectangles.
-                if (layer.name !== 'water') {
+                // Default depth is 0 (below player).
+                // If a layer has a custom boolean property 'abovePlayer' set to true in Tiled, 
+                // it renders at depth 20 (above the player).
+                const isAbove = layer.properties?.some((p: any) => p.name === 'abovePlayer' && p.value === true);
+                tileLayer.setDepth(isAbove ? 20 : 0);
+
+                if (this.isMaster) {
                     tileLayer.setCollisionByProperty({ collides: true });
                     this.scene.matter.world.convertTilemapLayer(tileLayer);
                 }
@@ -44,11 +49,26 @@ export class MapManager {
         });
 
         // =========================
-        // OBJECT COLLISIONS
+        // OBJECT & WATER COLLISIONS
         // =========================
-        const collisionLayer = this.map.getObjectLayer('Collisions');
+        // If this is a slave screen, skip physics entirely! Slaves only render graphics.
+        if (!this.isMaster) return;
+
+        // Support both lowercase and uppercase layer names
+        const collisionLayer = this.map.getObjectLayer('collisions') || this.map.getObjectLayer('Collisions');
 
         collisionLayer?.objects.forEach(obj => {
+            // Check if the object has the custom 'collides' property set to true
+            let shouldCollide = false;
+            if (Array.isArray(obj.properties)) {
+                shouldCollide = obj.properties.some((p: any) => p.name === 'collides' && p.value === true);
+            } else if (obj.properties) {
+                shouldCollide = obj.properties.collides === true;
+            }
+
+            // Only create physics bodies for objects that explicitly have the collides property
+            if (!shouldCollide) return;
+
             const x = obj.x ?? 0;
             const y = obj.y ?? 0;
             const width = obj.width ?? 0;
@@ -68,8 +88,6 @@ export class MapManager {
         // =========================
         // WATER BOUNDARY COLLISION
         // =========================
-        // For each cell in the map, check if ANY non-water layer has a
-        // tile there. If not, it's open water — place a static Matter body.
         const tileW = this.map.tileWidth;
         const tileH = this.map.tileHeight;
         const nonWaterLayers = this.createdLayers.filter(
@@ -102,5 +120,24 @@ export class MapManager {
 
     public get heightInPixels(): number {
         return this.map.heightInPixels;
+    }
+
+    public getPlayerSpawnPoint(): { x: number, y: number } {
+        // Look for an object layer named 'Spawns' or 'spawns'
+        const spawnsLayer = this.map.getObjectLayer('Spawns') || this.map.getObjectLayer('spawns');
+        
+        if (spawnsLayer && spawnsLayer.objects) {
+            // Find an object named 'PlayerSpawn' or of type 'PlayerSpawn'
+            const spawnPoint = spawnsLayer.objects.find(obj => obj.name === 'PlayerSpawn' || obj.type === 'PlayerSpawn');
+            if (spawnPoint) {
+                return { 
+                    x: spawnPoint.x ?? this.widthInPixels / 2, 
+                    y: spawnPoint.y ?? this.heightInPixels / 2 
+                };
+            }
+        }
+        
+        // Fallback to the center of the map
+        return { x: this.widthInPixels / 2, y: this.heightInPixels / 2 };
     }
 }
