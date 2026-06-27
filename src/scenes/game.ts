@@ -218,6 +218,24 @@ export default class MainScene extends Phaser.Scene {
                 this.scene.launch('PauseMenuScene');
             });
         }
+
+        // =========================
+        // LORE DIALOGUE ON SPAWN
+        // =========================
+        if (this.isMaster) {
+            // Fade in from black over 2 seconds
+            this.cameras.main.fadeIn(2000, 0, 0, 0);
+
+            this.time.delayedCall(2000, () => {
+                events.emit('show-dialog', [
+                    { speaker: 'The Awakened', text: "...Ugh. My head. How long have I been asleep?" },
+                    { speaker: 'The Awakened', text: "The last thing I remember... the sky turning black, and the Great Castle falling. Then, nothing but darkness." },
+                    { speaker: 'The Awakened', text: "My armor... the blue crest of the River-Folk. I must be miles away from the Domain." },
+                    { speaker: 'The Awakened', text: "This forest feels... wrong. I can hear rustling in the bushes. I need to find a way out of these woods and figure out what happened to the kingdom." },
+                    { speaker: 'System', text: "Use W, A, S, D to move and SPACE to attack. Beware of the feral Goblins lurking in the trees!" }
+                ]);
+            });
+        }
     }
 
     update(time: number, delta: number) {

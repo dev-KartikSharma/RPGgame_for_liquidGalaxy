@@ -1,15 +1,21 @@
 import Phaser from 'phaser';
 
+export interface DialogPage {
+    speaker?: string;
+    text: string;
+}
+
 export class DialogBox {
     private scene: Phaser.Scene;
     public container: Phaser.GameObjects.Container;
     private background: Phaser.GameObjects.Rectangle;
     private textObj: Phaser.GameObjects.Text;
+    private speakerTextObj: Phaser.GameObjects.Text;
     
     private isTyping: boolean = false;
     private currentText: string = '';
     private currentIndex: number = 0;
-    private pages: string[] = [];
+    private pages: DialogPage[] = [];
     private pageIndex: number = 0;
     private typeTimer?: Phaser.Time.TimerEvent;
 
@@ -18,14 +24,20 @@ export class DialogBox {
 
         this.container = scene.add.container(0, 0).setVisible(false);
 
-        // Create the background panel (using a primitive rectangle for now, 
-        // could use 'paper_bg' scaled or a 9-slice banner)
+        // Create the background panel
         this.background = scene.add.rectangle(0, 0, 1024, 150, 0x000000, 0.8)
             .setOrigin(0.5)
             .setInteractive(); // catch clicks
 
         // Border
         this.background.setStrokeStyle(4, 0xffffff);
+
+        // Speaker Text object
+        this.speakerTextObj = scene.add.text(0, 0, '', {
+            fontSize: '20px',
+            color: '#ffff00',
+            fontStyle: 'bold'
+        }).setOrigin(0, 0);
 
         // Text object
         this.textObj = scene.add.text(0, 0, '', {
@@ -34,7 +46,7 @@ export class DialogBox {
             wordWrap: { width: 1024 - 40 }
         }).setOrigin(0, 0);
 
-        this.container.add([this.background, this.textObj]);
+        this.container.add([this.background, this.speakerTextObj, this.textObj]);
 
         this.resize(scene.scale.width / 2, scene.scale.height / 2); // Initial layout
 
@@ -48,15 +60,20 @@ export class DialogBox {
         this.background.setSize(dialogWidth, 150);
         this.background.setPosition(logicalWidth / 2, logicalHeight - 100);
         
-        this.textObj.setPosition(logicalWidth / 2 - dialogWidth / 2 + 20, logicalHeight - 150);
+        this.speakerTextObj.setPosition(logicalWidth / 2 - dialogWidth / 2 + 20, logicalHeight - 170);
+        this.textObj.setPosition(logicalWidth / 2 - dialogWidth / 2 + 20, logicalHeight - 140);
         this.textObj.setStyle({ wordWrap: { width: dialogWidth - 40 } });
     }
 
-    public show(text: string | string[]) {
+    public show(text: string | string[] | DialogPage[]) {
         if (Array.isArray(text)) {
-            this.pages = text;
+            if (text.length > 0 && typeof text[0] === 'string') {
+                this.pages = (text as string[]).map(t => ({ text: t }));
+            } else {
+                this.pages = text as DialogPage[];
+            }
         } else {
-            this.pages = [text];
+            this.pages = [{ text: text as string }];
         }
         this.pageIndex = 0;
         this.startPage();
@@ -64,7 +81,16 @@ export class DialogBox {
     }
 
     private startPage() {
-        this.currentText = this.pages[this.pageIndex];
+        const page = this.pages[this.pageIndex];
+        this.currentText = page.text;
+        
+        if (page.speaker) {
+            this.speakerTextObj.setText(page.speaker);
+            this.speakerTextObj.setVisible(true);
+        } else {
+            this.speakerTextObj.setVisible(false);
+        }
+
         this.currentIndex = 0;
         this.isTyping = true;
         this.textObj.setText('');
@@ -98,7 +124,7 @@ export class DialogBox {
     }
 
     private handleInput() {
-        if (!this.background.visible) return;
+        if (!this.container.visible) return;
 
         if (this.isTyping) {
             // Skip typing and show full text
