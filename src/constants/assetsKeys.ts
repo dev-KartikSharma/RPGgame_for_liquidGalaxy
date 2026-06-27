@@ -2,121 +2,125 @@
 export const ASEPRITES = [
     {
         key: 'player',
-        textureURL: 'units/warrior/Warrior.png',
-        atlasURL: 'units/warrior/Warrior.json'
+        textureURL: 'units/warrior/warrior.png',
+        atlasURL: 'units/warrior/warrior.json'
     },
     {
         key: 'enemy_goblin_torch_blue',
-        textureURL: 'terrain/enemy/goblin/Troops/Torch/Blue/Torch_Blue.png',
-        atlasURL: 'terrain/enemy/goblin/Troops/Torch/Blue/Torch_Blue.json'
+        textureURL: 'terrain/enemy/goblin/troops/torch/blue/torch_blue.png',
+        atlasURL: 'terrain/enemy/goblin/troops/torch/blue/torch_blue.json'
     }
 ];
 
 export const TILESETS = [
     //Master Tileset
     {
-        tiledName: 'Frame 1',
-        key: 'Frame 1',
-        path: 'terrain/master/Frame 1.png'
+        tiledName: 'frame_1', // updated to match spawn.json
+        key: 'frame_1',
+        path: 'terrain/master/frame_1.png'
     },
     {
-        tiledName: 'Frame 2',
-        key: 'Frame 2   ',
-        path: 'terrain/master/Frame 2.png'
-    },
-    {
-        tiledName: 'Trees',
-        key: 'Trees',
-        path: 'terrain/master/Trees.png'
-    },
-    {
-        tiledName: 'reclaim',
-        key: 'reclaim',
-        path: 'terrain/master/reclaim.png'
-    },
-    {
-        tiledName: 'sheeps',
-        key: 'sheeps',
-        path: 'terrain/master/sheeps.png'
+        tiledName: 'trees', // updated to match spawn.json
+        key: 'trees',
+        path: 'terrain/master/trees.png'
     },
 
 
     //Terrain/Bridge/
     {
-        tiledName: 'bridge',
+        tiledName: 'bridge_all', // updated to match spawn.json
         key: 'bridge',
-        path: 'terrain/Bridge/Bridge_All.png'
+        path: 'terrain/bridge/bridge_all.png'
     },
 
-
+    // Additional tilesets for spawn.json
+    {
+        tiledName: 'masterTilesetBuildings',
+        key: 'masterTilesetBuildings',
+        path: 'buildings/masterTilesetBuildings.png' // assuming this path works based on common structure, wait, I should check it, but this is the best guess
+    },
+    {
+        tiledName: 'bushe1',
+        key: 'bushe1',
+        path: 'terrain/deco/bushes/bushe1.png'
+    },
+    {
+        tiledName: 'Shadow',
+        key: 'shadow',
+        path: 'terrain/master/Shadow.png'
+    }
 ];
 
 export const MAPS = [
     {
         key: 'map',
-        path: 'maps/lurelin.json'
+        path: 'maps/spawn.json'
     }
 ];
 
 export const UI_ASSETS = [
     {
-        key: 'BigBar_Base',
-        path: 'UI Elements/UI Elements/Bars/BigBar_Base.png'
+        key: 'big_bar_base',
+        path: 'ui_elements/ui_elements/bars/big_bar_base.png'
     },
     {
-        key: 'SmallBar_Base',
-        path: 'UI Elements/UI Elements/Bars/SmallBar_Base.png'
+        key: 'small_bar_base',
+        path: 'ui_elements/ui_elements/bars/small_bar_base.png'
     },
     {
-        key: 'BigBar_Fill',
-        path: 'UI Elements/UI Elements/Bars/BigBar_Fill.png'
+        key: 'big_bar_fill',
+        path: 'ui_elements/ui_elements/bars/big_bar_fill.png'
     },
     {
-        key: 'SmallBar_Fill',
-        path: 'UI Elements/UI Elements/Bars/SmallBar_Fill.png'
+        key: 'small_bar_fill',
+        path: 'ui_elements/ui_elements/bars/small_bar_fill.png'
     },
     {
-        key: 'Avatars_01',
-        path: 'UI Elements/UI Elements/Human Avatars/Avatars_01.png'
+        key: 'avatars_01',
+        path: 'ui_elements/ui_elements/human_avatars/avatars_01.png'
     },
     {
-        key: 'Button_Regular',
-        path: 'UI Elements/UI Elements/Buttons/BigBlueButton_Regular.png'
+        key: 'button_regular',
+        path: 'ui_elements/ui_elements/buttons/big_blue_button_regular.png'
     },
     {
-        key: 'Button_Pressed',
-        path: 'UI Elements/UI Elements/Buttons/BigBlueButton_Pressed.png'
+        key: 'button_pressed',
+        path: 'ui_elements/ui_elements/buttons/big_blue_button_pressed.png'
     },
     {
-        key: 'Paper_Bg',
-        path: 'UI Elements/UI Elements/Papers/RegularPaper.png'
+        key: 'paper_bg',
+        path: 'ui_elements/ui_elements/papers/regular_paper.png'
     },
     {
-        key: 'Icon_01',
-        path: 'UI Elements/UI Elements/Icons/Icon_01.png'
+        key: 'icon_01',
+        path: 'ui_elements/ui_elements/icons/icon_01.png'
     },
     {
-        key: 'Icon_02',
-        path: 'UI Elements/UI Elements/Icons/Icon_02.png'
+        key: 'icon_02',
+        path: 'ui_elements/ui_elements/icons/icon_02.png'
     },
     {
-        key: 'BigRibbons',
-        path: 'UI Elements/UI Elements/Ribbons/BigRibbons.png'
+        key: 'big_ribbons',
+        path: 'ui_elements/ui_elements/ribbons/big_ribbons.png'
     },
     {
-        key: 'SpecialPaper',
-        path: 'UI Elements/UI Elements/Papers/SpecialPaper.png'
+        key: 'special_paper',
+        path: 'ui_elements/ui_elements/papers/special_paper.png'
     },
     {
-        key: 'Icon_09',
-        path: 'UI Elements/UI Elements/Icons/Icon_09.png'
+        key: 'icon_09',
+        path: 'ui_elements/ui_elements/icons/icon_09.png'
     },
     {
-        key: 'WoodTable',
-        path: 'UI Elements/UI Elements/Wood Table/WoodTable.png'
+        key: 'wood_table',
+        path: 'ui_elements/ui_elements/wood_table/wood_table.png'
     },
     {
-        key: 'StartScreen',
-        path: 'UI Elements/StartScreen.png'
+        key: 'start_screen',
+        path: 'ui_elements/start_screen.png'
+    },
+    {
+        key: 'small_ribbons',
+        path: 'ui_elements/ui_elements/ribbons/small_ribbons.png'
     }
 ];

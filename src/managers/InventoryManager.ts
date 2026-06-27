@@ -11,8 +11,8 @@ export class InventoryManager {
 
     constructor() {
         // Add some dummy items for testing
-        this.addItem({ id: 'potion', name: 'Health Potion', iconKey: 'Icon_01', quantity: 3 });
-        this.addItem({ id: 'sword', name: 'Iron Sword', iconKey: 'Icon_02', quantity: 1 });
+        this.addItem({ id: 'potion', name: 'Health Potion', iconKey: 'icon_01', quantity: 3 });
+        this.addItem({ id: 'sword', name: 'Iron Sword', iconKey: 'icon_02', quantity: 1 });
     }
 
     public addItem(item: Item): boolean {

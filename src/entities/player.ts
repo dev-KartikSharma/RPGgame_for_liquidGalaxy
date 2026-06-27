@@ -6,6 +6,7 @@ export class Player extends Phaser.Physics.Matter.Sprite {
     private wasd: any;
     private attackKey: Phaser.Input.Keyboard.Key;
     private guardKey: Phaser.Input.Keyboard.Key;
+    private interactKey: Phaser.Input.Keyboard.Key;
 
     // Stats Placeholders
     public maxHealth: number = 100;
@@ -34,6 +35,7 @@ export class Player extends Phaser.Physics.Matter.Sprite {
         this.wasd = scene.input.keyboard!.addKeys('W,A,S,D');
         this.attackKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         this.guardKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+        this.interactKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.E);
 
         // Initialize UI values
         events.emit('player-health-changed', this.health, this.maxHealth);
@@ -100,9 +102,9 @@ export class Player extends Phaser.Physics.Matter.Sprite {
             this.takeDamage(10);
         }
 
-        // Debug key to test Dialog
-        if (Phaser.Input.Keyboard.JustDown(this.scene.input.keyboard!.addKey('C'))) {
-            events.emit('show-dialog', "Hello there, traveler! Welcome to the RPG Game. This is a very long text to demonstrate the typewriter effect in the DialogBox.");
+        // Interaction
+        if (Phaser.Input.Keyboard.JustDown(this.interactKey)) {
+            events.emit('interact', this);
         }
 
         if (leftDown) {

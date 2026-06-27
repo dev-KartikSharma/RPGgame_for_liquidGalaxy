@@ -9,6 +9,8 @@ export class DialogBox {
     private isTyping: boolean = false;
     private currentText: string = '';
     private currentIndex: number = 0;
+    private pages: string[] = [];
+    private pageIndex: number = 0;
     private typeTimer?: Phaser.Time.TimerEvent;
 
     constructor(scene: Phaser.Scene) {
@@ -17,7 +19,7 @@ export class DialogBox {
         this.container = scene.add.container(0, 0).setVisible(false);
 
         // Create the background panel (using a primitive rectangle for now, 
-        // could use 'Paper_Bg' scaled or a 9-slice banner)
+        // could use 'paper_bg' scaled or a 9-slice banner)
         this.background = scene.add.rectangle(0, 0, 1024, 150, 0x000000, 0.8)
             .setOrigin(0.5)
             .setInteractive(); // catch clicks
@@ -50,13 +52,22 @@ export class DialogBox {
         this.textObj.setStyle({ wordWrap: { width: dialogWidth - 40 } });
     }
 
-    public show(text: string) {
-        this.currentText = text;
+    public show(text: string | string[]) {
+        if (Array.isArray(text)) {
+            this.pages = text;
+        } else {
+            this.pages = [text];
+        }
+        this.pageIndex = 0;
+        this.startPage();
+        this.container.setVisible(true);
+    }
+
+    private startPage() {
+        this.currentText = this.pages[this.pageIndex];
         this.currentIndex = 0;
         this.isTyping = true;
         this.textObj.setText('');
-        
-        this.container.setVisible(true);
 
         this.typeTimer = this.scene.time.addEvent({
             delay: 30, // typing speed
@@ -95,8 +106,14 @@ export class DialogBox {
             this.textObj.setText(this.currentText);
             this.isTyping = false;
         } else {
-            // Dismiss dialog
-            this.hide();
+            // Advance to next page if available
+            this.pageIndex++;
+            if (this.pageIndex < this.pages.length) {
+                this.startPage();
+            } else {
+                // Dismiss dialog
+                this.hide();
+            }
         }
     }
 }

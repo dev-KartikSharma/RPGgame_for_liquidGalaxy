@@ -18,8 +18,6 @@ export default class UIScene extends Phaser.Scene {
 
     private containerLeft!: Phaser.GameObjects.Container;
     private containerRight!: Phaser.GameObjects.Container;
-    private graphicsLeft!: Phaser.GameObjects.Graphics;
-    private graphicsRight!: Phaser.GameObjects.Graphics;
 
     constructor() {
         super({ key: 'UIScene', active: false });
@@ -36,10 +34,10 @@ export default class UIScene extends Phaser.Scene {
         // --- HUD TILEMAP ---
         const map = this.make.tilemap({ key: 'ui_map' });
         
-        const bigBarTileset = map.addTilesetImage('BigBar_Base', 'BigBar_Base');
-        const smallBarTileset = map.addTilesetImage('SmallBar_Base', 'SmallBar_Base');
-        const avatarsTileset = map.addTilesetImage('Avatars_01', 'Avatars_01');
-        const ribbonsTileset = map.addTilesetImage('SmallRibbons', 'SmallRibbons');
+        const bigBarTileset = map.addTilesetImage('BigBar_Base', 'big_bar_base');
+        const smallBarTileset = map.addTilesetImage('SmallBar_Base', 'small_bar_base');
+        const avatarsTileset = map.addTilesetImage('Avatars_01', 'avatars_01');
+        const ribbonsTileset = map.addTilesetImage('SmallRibbons', 'small_ribbons');
 
         const tilesets = [];
         if (bigBarTileset) tilesets.push(bigBarTileset);
@@ -47,21 +45,14 @@ export default class UIScene extends Phaser.Scene {
         if (avatarsTileset) tilesets.push(avatarsTileset);
         if (ribbonsTileset) tilesets.push(ribbonsTileset);
 
-        // --- MASKS ---
-        this.graphicsLeft = this.add.graphics();
-        this.graphicsLeft.setVisible(false); // Hide the mask from rendering!
-        this.graphicsRight = this.add.graphics();
-        this.graphicsRight.setVisible(false); // Hide the mask from rendering!
-        
-        const maskLeft = this.graphicsLeft.createGeometryMask();
-        const maskRight = this.graphicsRight.createGeometryMask();
-
         // --- LEFT HUD ---
         this.containerLeft = this.add.container(0, 0);
         this.containerLeft.setScale(uiZoom);
-        this.containerLeft.setMask(maskLeft);
 
-        const hudLayerLeft = map.createLayer('HUD', tilesets, 0, 0);
+        // Load HUD_Left layer (or fallback to HUD if the user hasn't split it yet in Tiled)
+        let hudLayerLeft = null;
+        if (map.getLayer('HUD_Left')) hudLayerLeft = map.createLayer('HUD_Left', tilesets, 0, 0);
+        else if (map.getLayer('HUD')) hudLayerLeft = map.createLayer('HUD', tilesets, 0, 0);
         if (hudLayerLeft) this.containerLeft.add(hudLayerLeft);
 
         // Extract Health/Mana fill areas
@@ -83,10 +74,11 @@ export default class UIScene extends Phaser.Scene {
         // --- RIGHT HUD ---
         this.containerRight = this.add.container(0, 0);
         this.containerRight.setScale(uiZoom);
-        this.containerRight.setMask(maskRight);
 
-        // We create a SECOND instance of the layer for the right side!
-        const hudLayerRight = map.createLayer('HUD', tilesets, 0, 0);
+        // Load HUD_Right layer (or fallback to HUD if the user hasn't split it yet in Tiled)
+        let hudLayerRight = null;
+        if (map.getLayer('HUD_Right')) hudLayerRight = map.createLayer('HUD_Right', tilesets, 0, 0);
+        // We do NOT fallback to HUD here because HUD was already created in HUD_Left!
         if (hudLayerRight) this.containerRight.add(hudLayerRight);
 
         // --- DIALOG BOX ---
@@ -119,15 +111,6 @@ export default class UIScene extends Phaser.Scene {
 
             // Right HUD snaps the logical 1280 right-edge to the physical right-edge
             this.containerRight.setPosition(physicalWidth - 1280 * uiZoom, 0);
-
-            // Update Masks to split the screen exactly in half
-            this.graphicsLeft.clear();
-            this.graphicsLeft.fillStyle(0xffffff);
-            this.graphicsLeft.fillRect(0, 0, physicalWidth / 2, physicalHeight);
-
-            this.graphicsRight.clear();
-            this.graphicsRight.fillStyle(0xffffff);
-            this.graphicsRight.fillRect(physicalWidth / 2, 0, physicalWidth / 2, physicalHeight);
         };
         resizeUI();
         this.scale.on('resize', resizeUI);

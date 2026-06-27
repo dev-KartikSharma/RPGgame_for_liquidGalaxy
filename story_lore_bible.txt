@@ -1,0 +1,78 @@
+The Shattered Banners: Lore and World Bible
+
+Note: This document serves as the foundational lore for our RPG game. It ties together the provided map regions and the existing game assets (Colored factions, Goblins, Knights) into a cohesive world and narrative.
+
+1. The Prologue: The Fall of the White Banner
+For centuries, the land was unified under the White Banner, a symbol of peace that flew highest above Hyrule Castle. The kingdom was protected by an elite vanguard of Knights and Mystics. However, a dark sorcery—known only as The Eclipse—emerged from the depths beneath the castle. The Eclipse did not just kill; it corrupted. It twisted the minds of the royal guard, turning them into the soulless, red-eyed Black Knights.
+
+With the capital lost in a single night, the surviving generals fled, taking their armies back to their respective homelands. Without a central leader, paranoia and resource scarcity caused the armies to turn on one another. The White Banner burned, and the kingdom fractured into color-coded, warring factions.
+
+2. The Protagonist: The Last Vanguard
+You are The Awakened. A century ago, during the fall of Hyrule Castle, you were a legendary Warrior of the White Banner. Mortally wounded, you were placed in a deep, magical stasis within the Shrine of Resurrection on the Great Plateau. 
+
+You awaken with no memory of your past, armed only with a rusted sword (the basic Warrior asset). You wear neutral colors. Because you bear the ancient, forgotten crest of the White Banner, you are the only person who can cross the borders of the warring factions without immediately being shot on sight. 
+
+3. The Factions and Regions
+The world is divided by geography and loyalties. Each faction uses specific classes (Archers, Lancers, Monks, Pawns, Warriors).
+
+[The Blue Faction: The River-Folk]
+* Territory: Zora's Domain, Lanayru, and Lake Hylia.
+* Vibe: Defensive, spiritual, and proud. They control the water trade.
+* Units: Predominantly Lancers and Monks. They use their long reach to defend bridges and river crossings.
+* Lore: They believe the kingdom is a lost cause and have isolated themselves, refusing to help the other regions. You must prove to them that the water is slowly being poisoned by the Black Knights to gain their allegiance.
+
+[The Yellow Faction: The Desert Guard]
+* Territory: Gerudo and the Kara Kara Bazaar.
+* Vibe: Harsh, mercantile, and fiercely independent.
+* Units: Archers and Warriors. They strike fast and from a distance.
+* Lore: They are currently facing a massive famine due to the trade routes being cut off. They will only join your cause if you can secure the southern trade routes through the Faron Region.
+
+[The Purple Faction: The Mystics of the Peaks]
+* Territory: Hebra Mountains and the Ancient Tech Labs (Hatteno/Akkala).
+* Vibe: Secretive, intelligent, and magical.
+* Units: Monks and Pawns. 
+* Lore: They are scholars researching a way to reverse The Eclipse. They are holed up in the freezing mountains and ancient labs, constantly defending themselves against the elements. They will provide you with magical upgrades in exchange for ancient relics found across the map.
+
+[The Red Faction: The Warmongers (Antagonists)]
+* Territory: Death Mountain, Eldin, and the Lost Woods.
+* Vibe: Aggressive, ruthless, and chaotic.
+* Units: Heavy Warriors and Archers. 
+* Lore: Led by a warlord who believes the only way to survive The Eclipse is through brutal strength. They have forged a dark alliance with the Goblins, allowing the feral monsters to roam their lands as long as they attack the other factions. They are a major obstacle and must be defeated or intimidated into submission.
+
+---
+
+4. The Enemy Forces
+These are the enemies that will utilize your current enemy.ts system.
+
+WARNING: The Goblins (Wilderness Threats)
+Goblins are feral, unaligned monsters that have thrived in the chaos. They roam the Great Hyrule Field, the forests, and the roads. They have a high aggro range but low health. They attack in swarms.
+
+IMPORTANT: The Black Knights (The Corrupted Guard)
+The primary antagonists. They patrol the inner circles of the map near Hyrule Castle. They are slow but have high health and devastating attack damage. They do not flinch easily (high knockback resistance).
+
+---
+
+5. The Companion System (Gameplay Mechanic)
+While you play as the central Warrior, you will not fight the Black Knights alone. As you progress through the story and unite the shattered factions, you will unlock Followers who join your party and fight alongside you in the overworld.
+* The Spearman (Blue Faction): Unlocked after saving Zora's Domain. They follow closely and poke enemies from a safe distance, keeping Goblins at bay.
+* The Archer (Yellow Faction): Unlocked in Gerudo. They provide ranged cover fire, essential for dealing with enemies on high ground or approaching swarms.
+* The Healer/Monk (Purple Faction): Unlocked in the Hebra Mountains. They cast periodic healing spells or defensive buffs during tough encounters.
+* Progression: By the end of the game, your lone warrior will be the leader of a small, diverse squad, visually representing the united banners!
+
+---
+
+6. The Main Questline: The Hero's Journey
+
+[Act 1: The Awakening (Tutorial & Survival)]
+* Location: The Great Plateau.
+* Events: You wake up in the Shrine of Resurrection. You learn basic combat against roaming Goblins. You discover the ruined Temple of Time, where a spectral guide explains the history of the Shattered Banners. You must find a way off the high cliffs of the Plateau to enter the wider world.
+
+[Act 2: The Shattered Alliances (Exploration & RPG mechanics)]
+* Location: The wider map (Gerudo, Zora's Domain, Hebra).
+* Events: You travel to the various villages (Kakarino, Saria Town, Lurelin). You are tasked with solving the regional problems of the Blue, Yellow, and Purple factions. 
+* Conflict: The Red Faction constantly harasses you. You will have to storm their stronghold on Death Mountain to break the Goblin alliance, effectively neutering the Red Army's power.
+
+[Act 3: The Siege (The Climax)]
+* Location: Great Hyrule Field and Hyrule Castle.
+* Events: Once the banners are united, you lead a massive, multi-colored army into the Great Hyrule Field. The game shifts from a solo RPG to a larger skirmish, where Blue Lancers and Yellow Archers fight alongside you. 
+* The Finale: You breach Hyrule Castle, fight your way through the elite Black Knights, and face the source of The Eclipse to restore the White Banner once and for all.

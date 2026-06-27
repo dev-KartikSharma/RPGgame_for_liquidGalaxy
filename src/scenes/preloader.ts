@@ -58,7 +58,7 @@ export default class PreloaderScene extends Phaser.Scene {
         // UI ASSETS
         // =========================
         this.load.tilemapTiledJSON('ui_map', 'maps/ui_map.json');
-        this.load.tilemapTiledJSON('PauseMenu', 'maps/PauseMenu.json');
+        this.load.tilemapTiledJSON('pause_menu', 'maps/pause_menu.json');
 
         UI_ASSETS.forEach(asset => {
             this.load.image(

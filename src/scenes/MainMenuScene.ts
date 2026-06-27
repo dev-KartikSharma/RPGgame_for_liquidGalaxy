@@ -26,7 +26,7 @@ export default class MainMenuScene extends Phaser.Scene {
         const height = this.cameras.main.height;
 
         // Add background image and scale to fit
-        const bg = this.add.image(width / 2, height / 2, 'StartScreen');
+        const bg = this.add.image(width / 2, height / 2, 'start_screen');
         bg.setDisplaySize(width, height);
 
         this.add.text(width / 2, height / 3, 'RPG GAME', {
@@ -36,7 +36,7 @@ export default class MainMenuScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Start Button
-        this.startButton = this.add.image(width / 2, height / 2, 'Button_Regular').setInteractive();
+        this.startButton = this.add.image(width / 2, height / 2, 'button_regular').setInteractive();
         const startText = this.add.text(width / 2, height / 2 - 5, 'Start Game', {
             fontSize: '24px',
             color: '#fff',
@@ -44,18 +44,18 @@ export default class MainMenuScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         this.startButton.on('pointerdown', () => {
-            this.startButton.setTexture('Button_Pressed');
+            this.startButton.setTexture('button_pressed');
             startText.setY(height / 2 + 5); // move text down to simulate press
         });
 
         this.startButton.on('pointerup', () => {
-            this.startButton.setTexture('Button_Regular');
+            this.startButton.setTexture('button_regular');
             startText.setY(height / 2 - 5);
             this.startGame();
         });
 
         this.startButton.on('pointerout', () => {
-            this.startButton.setTexture('Button_Regular');
+            this.startButton.setTexture('button_regular');
             startText.setY(height / 2 - 5);
         });
     }

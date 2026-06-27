@@ -16,13 +16,13 @@ export default class PauseMenuScene extends Phaser.Scene {
         const bgRect = this.add.rectangle(0, 0, width, height, 0x000000, 0.5).setOrigin(0, 0);
 
         // Load the UI map
-        const map = this.make.tilemap({ key: 'PauseMenu' });
+        const map = this.make.tilemap({ key: 'pause_menu' });
 
         // Add tilesets
-        const ribbonTileset = map.addTilesetImage('BigRibbons', 'BigRibbons');
-        const paperTileset = map.addTilesetImage('SpecialPaper', 'SpecialPaper');
-        const iconTileset = map.addTilesetImage('Icon_09', 'Icon_09');
-        const woodTileset = map.addTilesetImage('WoodTable', 'WoodTable');
+        const ribbonTileset = map.addTilesetImage('BigRibbons', 'big_ribbons');
+        const paperTileset = map.addTilesetImage('SpecialPaper', 'special_paper');
+        const iconTileset = map.addTilesetImage('Icon_09', 'icon_09');
+        const woodTileset = map.addTilesetImage('WoodTable', 'wood_table');
 
         const tilesets = [];
         if (ribbonTileset) tilesets.push(ribbonTileset);

@@ -17,7 +17,7 @@ export class InventoryUI {
         this.resize(scene.scale.width / 2, scene.scale.height / 2); // Initial layout
 
         // Background
-        const bg = scene.add.image(0, 0, 'Paper_Bg').setScale(2);
+        const bg = scene.add.image(0, 0, 'paper_bg').setScale(2);
         this.container.add(bg);
 
         // Title

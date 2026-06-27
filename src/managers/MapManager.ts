@@ -1,11 +1,20 @@
 import Phaser from 'phaser';
 import { TILESETS } from '../constants/assetsKeys';
 
+interface AnimatedTile {
+    tile: Phaser.Tilemaps.Tile;
+    animation: { tileid: number, duration: number }[];
+    currentFrame: number;
+    timer: number;
+    firstgid: number;
+}
+
 export class MapManager {
     public map: Phaser.Tilemaps.Tilemap;
     public createdLayers: Phaser.Tilemaps.TilemapLayer[] = [];
     private scene: Phaser.Scene;
     private isMaster: boolean;
+    private animatedTiles: AnimatedTile[] = [];
 
     constructor(scene: Phaser.Scene, isMaster: boolean = true) {
         this.scene = scene;
@@ -18,32 +27,68 @@ export class MapManager {
         // TILESETS
         // =========================
         const registeredTilesets: Phaser.Tilemaps.Tileset[] = [];
+        
+        // We need to keep track of tileset animation data
+        const tilesetAnimations: { [firstgid: number]: { [tileid: number]: { tileid: number, duration: number }[] } } = {};
 
         for (const asset of TILESETS) {
             const tileset = this.map.addTilesetImage(asset.tiledName, asset.key);
             if (tileset) {
                 registeredTilesets.push(tileset);
+                
+                // Extract animation data from the tileset
+                if (tileset.tileData) {
+                    tilesetAnimations[tileset.firstgid] = {};
+                    for (const tileIdStr in tileset.tileData) {
+                        const tileData = tileset.tileData[tileIdStr] as any;
+                        if (tileData && tileData.animation) {
+                            tilesetAnimations[tileset.firstgid][parseInt(tileIdStr)] = tileData.animation;
+                        }
+                    }
+                }
             }
         }
 
         // =========================
         // TILE LAYERS
         // =========================
-        this.map.layers.forEach(layer => {
-            const tileLayer = this.map.createLayer(layer.name, registeredTilesets, 0, 0);
+        this.map.layers.forEach((layerData, index) => {
+            // We use standard TilemapLayer (no 'true') because GPULayer crashes with multiple tilesets!
+            const tileLayer = this.map.createLayer(layerData.name, registeredTilesets, 0, 0);
 
-            if (tileLayer instanceof Phaser.Tilemaps.TilemapLayer) {
+            if (tileLayer) {
                 this.createdLayers.push(tileLayer);
 
-                // Default depth is 0 (below player).
-                // If a layer has a custom boolean property 'abovePlayer' set to true in Tiled, 
-                // it renders at depth 20 (above the player).
-                const isAbove = layer.properties?.some((p: any) => p.name === 'abovePlayer' && p.value === true);
-                tileLayer.setDepth(isAbove ? 20 : 0);
+                const isAbove = layerData.properties?.some((p: any) => p.name === 'abovePlayer' && p.value === true);
+                tileLayer.setDepth(isAbove ? 20 : index);
 
                 if (this.isMaster) {
                     tileLayer.setCollisionByProperty({ collides: true });
                     this.scene.matter.world.convertTilemapLayer(tileLayer);
+                }
+
+                // Scan this layer for any animated tiles
+                for (let row = 0; row < this.map.height; row++) {
+                    for (let col = 0; col < this.map.width; col++) {
+                        const tile = tileLayer.getTileAt(col, row);
+                        if (tile && tile.index > 0) {
+                            // Find which tileset this tile belongs to
+                            const tileset = this.map.tilesets.find(ts => tile.index >= ts.firstgid && tile.index < ts.firstgid + ts.total);
+                            if (tileset) {
+                                const localId = tile.index - tileset.firstgid;
+                                const animData = tilesetAnimations[tileset.firstgid]?.[localId];
+                                if (animData) {
+                                    this.animatedTiles.push({
+                                        tile: tile,
+                                        animation: animData,
+                                        currentFrame: 0,
+                                        timer: 0,
+                                        firstgid: tileset.firstgid
+                                    });
+                                }
+                            }
+                        }
+                    }
                 }
             }
         });
@@ -110,6 +155,22 @@ export class MapManager {
                         { isStatic: true }
                     );
                 }
+            }
+        }
+    }
+
+    public update(delta: number) {
+        for (const animTile of this.animatedTiles) {
+            animTile.timer += delta;
+            const currentAnimData = animTile.animation[animTile.currentFrame];
+            
+            if (animTile.timer >= currentAnimData.duration) {
+                animTile.timer -= currentAnimData.duration;
+                animTile.currentFrame = (animTile.currentFrame + 1) % animTile.animation.length;
+                const nextAnimData = animTile.animation[animTile.currentFrame];
+                
+                // Update the tile index visually!
+                animTile.tile.index = animTile.firstgid + nextAnimData.tileid;
             }
         }
     }

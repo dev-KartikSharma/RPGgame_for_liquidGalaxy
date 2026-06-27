@@ -78,6 +78,7 @@ export default class MainScene extends Phaser.Scene {
         // ENEMIES
         // =========================
         if (this.isMaster) {
+            /* 
             for (let i = 0; i < 8; i++) {
                 // Spawn closely alongside the player for testing purposes
                 const ex = spawnPoint.x + Phaser.Math.Between(-80, 80);
@@ -87,6 +88,7 @@ export default class MainScene extends Phaser.Scene {
                 enemy.setTarget(this.player);
                 this.enemies.push(enemy);
             }
+            */
 
             events.on('player-attack', (attackingPlayer: Player) => {
                 const attackRange = 80;
@@ -218,7 +220,11 @@ export default class MainScene extends Phaser.Scene {
         }
     }
 
-    update(time: number) {
+    update(time: number, delta: number) {
+        if (this.mapManager) {
+            this.mapManager.update(delta);
+        }
+
         if (this.isMaster) {
             this.player.update(time);
             

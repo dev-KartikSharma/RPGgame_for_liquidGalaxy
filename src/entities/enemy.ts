@@ -1,7 +1,5 @@
 import Phaser from 'phaser';
 import { Player } from './player';
-import { events } from '../managers/EventManager';
-
 export class Enemy extends Phaser.Physics.Matter.Sprite {
     public maxHealth: number = 50;
     public health: number = 50;
@@ -107,7 +105,7 @@ export class Enemy extends Phaser.Physics.Matter.Sprite {
         this.health -= amount;
 
         // Flash red when hit
-        this.setTintFill(0xff0000);
+        this.setTint(0xff0000);
         this.scene.time.delayedCall(100, () => {
             this.clearTint();
         });
