@@ -20,7 +20,7 @@ export class Enemy extends Phaser.Physics.Matter.Sprite {
         scene.add.existing(this);
 
         this.setScale(0.5);
-        // Adjust the hitbox size if necessary
+        // hitbox
         this.setRectangle(35, 35);
         this.setFixedRotation();
         this.setFriction(0);
@@ -44,7 +44,7 @@ export class Enemy extends Phaser.Physics.Matter.Sprite {
 
         const currentAnim = this.anims.currentAnim?.key;
 
-        // If attack is playing no interruption
+        // attack animation lock
         if (currentAnim === 'enemy_attack') {
             if (!this.anims.isPlaying) {
                 this.play('enemy_idle', true);
@@ -72,7 +72,7 @@ export class Enemy extends Phaser.Physics.Matter.Sprite {
                 this.play('enemy_attack', true);
                 this.lastAttackTime = time;
                 
-                // Deal damage to player roughly halfway through the animation (simplified)
+                // deal damage mid-anim
                 this.scene.time.delayedCall(300, () => {
                     if (!this.isDead && !this.target?.isDead && Phaser.Math.Distance.Between(this.x, this.y, this.target!.x, this.target!.y) <= this.attackRange + 20) {
                         this.target!.takeDamage(this.attackDamage);
@@ -82,7 +82,7 @@ export class Enemy extends Phaser.Physics.Matter.Sprite {
                 this.play('enemy_idle', true);
             }
         } else {
-            // Move towards target
+            // chase
             const angle = Phaser.Math.Angle.Between(this.x, this.y, this.target.x, this.target.y);
             const vx = Math.cos(angle) * this.speed;
             const vy = Math.sin(angle) * this.speed;
@@ -90,7 +90,7 @@ export class Enemy extends Phaser.Physics.Matter.Sprite {
             this.setVelocity(vx, vy);
             this.play('enemy_run', true);
 
-            // Flip sprite based on direction
+            // face direction
             if (vx < 0) {
                 this.setFlipX(true);
             } else if (vx > 0) {
@@ -110,7 +110,7 @@ export class Enemy extends Phaser.Physics.Matter.Sprite {
             this.clearTint();
         });
 
-        // Knockback effect
+        // knockback
         if (this.target) {
             const angle = Phaser.Math.Angle.Between(this.target.x, this.target.y, this.x, this.y);
             this.setVelocity(Math.cos(angle) * 5, Math.sin(angle) * 5);
@@ -120,7 +120,7 @@ export class Enemy extends Phaser.Physics.Matter.Sprite {
             this.isDead = true;
             this.setVelocity(0, 0);
             
-            // Just tint grey or disappear for now
+            // simple death fx
             this.setTint(0x555555);
             this.scene.time.delayedCall(1000, () => {
                 this.destroy();

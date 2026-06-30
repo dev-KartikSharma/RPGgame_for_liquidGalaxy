@@ -34,9 +34,9 @@ export default class UIScene extends Phaser.Scene {
         // --- HUD TILEMAP ---
         const map = this.make.tilemap({ key: 'ui_map' });
         
-        const bigBarTileset = map.addTilesetImage('BigBar_Base', 'big_bar_base');
-        const smallBarTileset = map.addTilesetImage('SmallBar_Base', 'small_bar_base');
-        const avatarsTileset = map.addTilesetImage('Avatars_01', 'avatars_01');
+        const bigBarTileset = map.addTilesetImage('big_bar_base', 'big_bar_base');
+        const smallBarTileset = map.addTilesetImage('small_bar_base', 'small_bar_base');
+        const avatarsTileset = map.addTilesetImage('avatars_01', 'avatars_01');
         const ribbonsTileset = map.addTilesetImage('SmallRibbons', 'small_ribbons');
 
         const tilesets = [];

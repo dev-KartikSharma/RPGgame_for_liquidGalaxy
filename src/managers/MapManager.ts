@@ -23,9 +23,7 @@ export class MapManager {
     }
 
     public buildMap() {
-        // =========================
-        // TILESETS
-        // =========================
+        // load tilesets
         const registeredTilesets: Phaser.Tilemaps.Tileset[] = [];
         
         // We need to keep track of tileset animation data
@@ -40,7 +38,7 @@ export class MapManager {
                 if (tileset.tileData) {
                     tilesetAnimations[tileset.firstgid] = {};
                     for (const tileIdStr in tileset.tileData) {
-                        const tileData = tileset.tileData[tileIdStr] as any;
+                        const tileData = (tileset.tileData as any)[tileIdStr];
                         if (tileData && tileData.animation) {
                             tilesetAnimations[tileset.firstgid][parseInt(tileIdStr)] = tileData.animation;
                         }
@@ -49,12 +47,10 @@ export class MapManager {
             }
         }
 
-        // =========================
-        // TILE LAYERS
-        // =========================
+        // create layers
         this.map.layers.forEach((layerData, index) => {
-            // We use standard TilemapLayer (no 'true') because GPULayer crashes with multiple tilesets!
-            const tileLayer = this.map.createLayer(layerData.name, registeredTilesets, 0, 0);
+            // use standard layer
+            const tileLayer = this.map.createLayer(layerData.name, registeredTilesets, 0, 0) as Phaser.Tilemaps.TilemapLayer;
 
             if (tileLayer) {
                 this.createdLayers.push(tileLayer);
@@ -68,6 +64,7 @@ export class MapManager {
                 }
 
                 // Scan this layer for any animated tiles
+                // kinda slow to do this pixel by pixel but it works for now
                 for (let row = 0; row < this.map.height; row++) {
                     for (let col = 0; col < this.map.width; col++) {
                         const tile = tileLayer.getTileAt(col, row);
@@ -93,10 +90,7 @@ export class MapManager {
             }
         });
 
-        // =========================
-        // OBJECT & WATER COLLISIONS
-        // =========================
-        // If this is a slave screen, skip physics entirely! Slaves only render graphics.
+        // collisions (master only)
         if (!this.isMaster) return;
 
         // Support both lowercase and uppercase layer names
@@ -130,13 +124,11 @@ export class MapManager {
             );
         });
 
-        // =========================
-        // WATER BOUNDARY COLLISION
-        // =========================
+        // water bounds
         const tileW = this.map.tileWidth;
         const tileH = this.map.tileHeight;
         const nonWaterLayers = this.createdLayers.filter(
-            l => l.layer.name !== 'water'
+            l => !l.layer.name.toLowerCase().includes('water')
         );
 
         for (let row = 0; row < this.map.height; row++) {
@@ -152,7 +144,7 @@ export class MapManager {
                         row * tileH + tileH / 2,
                         tileW,
                         tileH,
-                        { isStatic: true }
+                        { isStatic: true, isSensor: true, label: 'water' }
                     );
                 }
             }
@@ -184,7 +176,7 @@ export class MapManager {
     }
 
     public getPlayerSpawnPoint(): { x: number, y: number } {
-        // Look for an object layer named 'Spawns' or 'spawns'
+        // Look for an object layer named 'Spawns' or 'spawns' (tiled is weird with caps)
         const spawnsLayer = this.map.getObjectLayer('Spawns') || this.map.getObjectLayer('spawns');
         
         if (spawnsLayer && spawnsLayer.objects) {
@@ -200,5 +192,24 @@ export class MapManager {
         
         // Fallback to the center of the map
         return { x: this.widthInPixels / 2, y: this.heightInPixels / 2 };
+    }
+
+    public getEnemySpawnPoints(): { x: number, y: number, type?: string }[] {
+        const spawnsLayer = this.map.getObjectLayer('Spawns') || this.map.getObjectLayer('spawns');
+        const enemySpawns: { x: number, y: number, type?: string }[] = [];
+
+        if (spawnsLayer && spawnsLayer.objects) {
+            spawnsLayer.objects.forEach(obj => {
+                if (obj.name === 'EnemySpawn' || obj.type === 'EnemySpawn') {
+                    enemySpawns.push({
+                        x: obj.x ?? 0,
+                        y: obj.y ?? 0,
+                        type: obj.type
+                    });
+                }
+            });
+        }
+
+        return enemySpawns;
     }
 }

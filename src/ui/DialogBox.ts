@@ -11,6 +11,7 @@ export class DialogBox {
     private background: Phaser.GameObjects.Rectangle;
     private textObj: Phaser.GameObjects.Text;
     private speakerTextObj: Phaser.GameObjects.Text;
+    private promptTextObj: Phaser.GameObjects.Text;
     
     private isTyping: boolean = false;
     private currentText: string = '';
@@ -46,13 +47,29 @@ export class DialogBox {
             wordWrap: { width: 1024 - 40 }
         }).setOrigin(0, 0);
 
-        this.container.add([this.background, this.speakerTextObj, this.textObj]);
+        // Prompt Text object
+        this.promptTextObj = scene.add.text(0, 0, 'Press F to continue ▼', {
+            fontSize: '16px',
+            color: '#aaaaaa',
+            fontStyle: 'italic'
+        }).setOrigin(1, 1);
+
+        // Blinking effect
+        scene.tweens.add({
+            targets: this.promptTextObj,
+            alpha: 0.2,
+            duration: 800,
+            yoyo: true,
+            repeat: -1
+        });
+
+        this.container.add([this.background, this.speakerTextObj, this.textObj, this.promptTextObj]);
 
         this.resize(scene.scale.width / 2, scene.scale.height / 2); // Initial layout
 
         // Click to advance/skip
         this.background.on('pointerdown', () => this.handleInput());
-        scene.input.keyboard!.on('keydown-SPACE', () => this.handleInput());
+        scene.input.keyboard!.on('keydown-F', () => this.handleInput());
     }
 
     public resize(logicalWidth: number, logicalHeight: number) {
@@ -63,6 +80,8 @@ export class DialogBox {
         this.speakerTextObj.setPosition(logicalWidth / 2 - dialogWidth / 2 + 20, logicalHeight - 170);
         this.textObj.setPosition(logicalWidth / 2 - dialogWidth / 2 + 20, logicalHeight - 140);
         this.textObj.setStyle({ wordWrap: { width: dialogWidth - 40 } });
+        
+        this.promptTextObj.setPosition(logicalWidth / 2 + dialogWidth / 2 - 20, logicalHeight - 35);
     }
 
     public show(text: string | string[] | DialogPage[]) {
@@ -94,6 +113,7 @@ export class DialogBox {
         this.currentIndex = 0;
         this.isTyping = true;
         this.textObj.setText('');
+        this.promptTextObj.setVisible(false);
 
         this.typeTimer = this.scene.time.addEvent({
             delay: 30, // typing speed
@@ -117,6 +137,7 @@ export class DialogBox {
             this.currentIndex++;
         } else {
             this.isTyping = false;
+            this.promptTextObj.setVisible(true);
             if (this.typeTimer) {
                 this.typeTimer.remove();
             }
@@ -131,6 +152,7 @@ export class DialogBox {
             if (this.typeTimer) this.typeTimer.remove();
             this.textObj.setText(this.currentText);
             this.isTyping = false;
+            this.promptTextObj.setVisible(true);
         } else {
             // Advance to next page if available
             this.pageIndex++;

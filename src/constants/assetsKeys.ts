@@ -12,6 +12,21 @@ export const ASEPRITES = [
     }
 ];
 
+export const SPRITESHEETS = [
+    {
+        key: 'water_splash',
+        path: 'effects/Water Splash.png',
+        frameWidth: 192,
+        frameHeight: 192
+    },
+    {
+        key: 'spawn_dust',
+        path: 'effects/Spawn Dust.png',
+        frameWidth: 64,
+        frameHeight: 64
+    }
+];
+
 export const TILESETS = [
     //Master Tileset
     {
@@ -36,8 +51,8 @@ export const TILESETS = [
     // Additional tilesets for spawn.json
     {
         tiledName: 'masterTilesetBuildings',
-        key: 'masterTilesetBuildings',
-        path: 'buildings/masterTilesetBuildings.png' // assuming this path works based on common structure, wait, I should check it, but this is the best guess
+        key: 'master_tileset_buildings',
+        path: 'buildings/master_tileset_buildings.png' // assuming this path works based on common structure, wait, I should check it, but this is the best guess
     },
     {
         tiledName: 'bushe1',
@@ -47,7 +62,7 @@ export const TILESETS = [
     {
         tiledName: 'Shadow',
         key: 'shadow',
-        path: 'terrain/master/Shadow.png'
+        path: 'terrain/master/shadow.png'
     }
 ];
 

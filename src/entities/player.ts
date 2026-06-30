@@ -8,13 +8,15 @@ export class Player extends Phaser.Physics.Matter.Sprite {
     private guardKey: Phaser.Input.Keyboard.Key;
     private interactKey: Phaser.Input.Keyboard.Key;
 
-    // Stats Placeholders
+    // player stats
     public maxHealth: number = 100;
     public health: number = 100;
     private maxMana: number = 100;
     private mana: number = 100;
     private lastManaRegenTime: number = 0;
     public isDead: boolean = false;
+    private inWaterCount: number = 0;
+    private waterDeathTimer: Phaser.Time.TimerEvent | null = null;
 
     constructor(scene: Phaser.Scene, x: number, y: number, texture: string, frame?: string | number) {
         super(scene.matter.world, x, y, texture, frame);
@@ -30,23 +32,69 @@ export class Player extends Phaser.Physics.Matter.Sprite {
 
         this.play('Idle');
 
-        // Input setup
+        // setup keys
         this.cursors = scene.input.keyboard!.createCursorKeys();
-        this.wasd = scene.input.keyboard!.addKeys('W,A,S,D');
+        this.wasd = scene.input.keyboard!.addKeys('W,A,S,D'); // adding WASD because arrow keys suck
         this.attackKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         this.guardKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
         this.interactKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.E);
 
-        // Initialize UI values
+        // init hud
         events.emit('player-health-changed', this.health, this.maxHealth);
         events.emit('player-mana-changed', this.mana, this.maxMana);
+
+        // drown in water
+        scene.matter.world.on('collisionstart', (event: Phaser.Physics.Matter.Events.CollisionStartEvent) => {
+            if (this.isDead || (this as any).isLGSlave) return;
+
+            for (const pair of event.pairs) {
+                const bodyA = pair.bodyA as MatterJS.BodyType;
+                const bodyB = pair.bodyB as MatterJS.BodyType;
+
+                const isPlayer = bodyA === this.body || bodyB === this.body;
+                const isWater = bodyA.label === 'water' || bodyB.label === 'water';
+
+                if (isPlayer && isWater) {
+                    this.inWaterCount++;
+                    if (this.inWaterCount === 1) {
+                        this.waterDeathTimer = scene.time.delayedCall(200, () => {
+                            if (!this.isDead && this.inWaterCount > 0) {
+                                this.dieInWater();
+                            }
+                        });
+                    }
+                }
+            }
+        });
+
+        scene.matter.world.on('collisionend', (event: Phaser.Physics.Matter.Events.CollisionStartEvent) => {
+            if (this.isDead || (this as any).isLGSlave) return;
+
+            for (const pair of event.pairs) {
+                const bodyA = pair.bodyA as MatterJS.BodyType;
+                const bodyB = pair.bodyB as MatterJS.BodyType;
+
+                const isPlayer = bodyA === this.body || bodyB === this.body;
+                const isWater = bodyA.label === 'water' || bodyB.label === 'water';
+
+                if (isPlayer && isWater) {
+                    this.inWaterCount = Math.max(0, this.inWaterCount - 1);
+                    if (this.inWaterCount === 0 && this.waterDeathTimer) {
+                        this.waterDeathTimer.destroy();
+                        this.waterDeathTimer = null;
+                    }
+                }
+            }
+        });
     }
 
     update(time: number) {
         if ((this as any).isLGSlave) {
-            // Slaves are controlled by the master screen via socket
+            // master controls slaves
             return;
         }
+
+        if (this.isDead) return;
 
         // Mana regeneration
         if (time > this.lastManaRegenTime + 1000) {
@@ -60,7 +108,7 @@ export class Player extends Phaser.Physics.Matter.Sprite {
         const speed = 3;
         const currentAnim = this.anims.currentAnim?.key;
 
-        // If attack is playing no interruption
+        // don't interrupt attacks
         if (currentAnim === 'Attack 1' || currentAnim === 'Attack 2') {
             if (!this.anims.isPlaying) {
                 this.play('Idle', true);
@@ -74,7 +122,7 @@ export class Player extends Phaser.Physics.Matter.Sprite {
             const attack = Math.random() < 0.5 ? 'Attack 1' : 'Attack 2';
             this.play(attack, true);
             
-            // Deal damage at the start of attack for simplicity
+            // attack logic
             events.emit('player-attack', this);
             return;
         }
@@ -97,9 +145,11 @@ export class Player extends Phaser.Physics.Matter.Sprite {
         const upDown = this.cursors.up.isDown || this.wasd.W.isDown;
         const downDown = this.cursors.down.isDown || this.wasd.S.isDown;
 
-        // Debug key to test UI
-        if (Phaser.Input.Keyboard.JustDown(this.scene.input.keyboard!.addKey('X'))) {
+        // debug damage
+        // used to be X but kept hitting it by accident
+        if (Phaser.Input.Keyboard.JustDown(this.scene.input.keyboard!.addKey('K'))) {
             this.takeDamage(10);
+            // console.log("took 10 damage manually");
         }
 
         // Interaction
@@ -131,7 +181,7 @@ export class Player extends Phaser.Physics.Matter.Sprite {
 
         this.setVelocity(vx, vy);
 
-        // Run / Idle
+        // animations
         if (moving) {
             if (currentAnim !== 'Run') {
                 this.play('Run', true);
@@ -145,10 +195,10 @@ export class Player extends Phaser.Physics.Matter.Sprite {
 
     takeDamage(amount: number) {
         if (this.isDead) return;
+        // console.log(`player took ${amount} damage, health is now ${this.health - amount}`);
         
-        // If the player is currently guarding, block the damage!
+        // block damage if guarding
         if (this.anims.currentAnim?.key === 'Guard') {
-            // We could play a block sound or visual effect here
             return;
         }
         
@@ -157,7 +207,7 @@ export class Player extends Phaser.Physics.Matter.Sprite {
 
         if (this.health <= 0) {
             this.isDead = true;
-            // Handle death logic here if needed
+            // handle death
         }
     }
 
@@ -168,5 +218,36 @@ export class Player extends Phaser.Physics.Matter.Sprite {
             return true;
         }
         return false;
+    }
+
+    dieInWater() {
+        if (this.isDead) return;
+        this.isDead = true;
+        this.setVelocity(0, 0);
+        this.setIgnoreGravity(true);
+        this.setCollidesWith(0);
+        this.setVisible(false);
+
+        // splash fx
+        const splash = this.scene.add.sprite(this.x, this.y, 'water_splash');
+        splash.setDepth(100); 
+        
+        // create anim if missing
+        // doing this here instead of preloader because i forgot lol
+        if (!this.scene.anims.exists('play_water_splash')) {
+            this.scene.anims.create({
+                key: 'play_water_splash',
+                frames: this.scene.anims.generateFrameNumbers('water_splash', { start: 0, end: 8 }), // 9 frames total (0 to 8)
+                frameRate: 8, // Slower frame rate so it's fully visible
+                repeat: 0
+            });
+        }
+        
+        splash.play('play_water_splash');
+
+        splash.on('animationcomplete', () => {
+            splash.destroy();
+            events.emit('player-died', this);
+        });
     }
 }

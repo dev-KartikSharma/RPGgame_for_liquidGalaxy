@@ -5,12 +5,14 @@ import { createEnemyAnimations } from '../animations/enemyanimation';
 import { Player } from '../entities/player';
 import { Enemy } from '../entities/enemy';
 import { MapManager } from '../managers/MapManager';
+import { ParticleManager } from '../managers/ParticleManager';
 import { events } from '../managers/EventManager';
 
 export default class MainScene extends Phaser.Scene {
 
     private player!: Player;
     private mapManager!: MapManager;
+    private particleManager!: ParticleManager;
 
     private socket: any;
     private isMaster: boolean = true;
@@ -24,9 +26,8 @@ export default class MainScene extends Phaser.Scene {
     }
 
     create() {
-        // =========================
-        // LIQUID GALAXY SETUP
-        // =========================
+        // lg screen setup
+        // TODO: test if this works on actual setup instead of localhost
         const urlParams = new URLSearchParams(window.location.search);
         const screenParam = urlParams.get('screen');
         if (screenParam) {
@@ -36,23 +37,15 @@ export default class MainScene extends Phaser.Scene {
             }
         }
 
-        // =========================
-        // ANIMATIONS
-        // =========================
+        // animations
         createPlayerAnimations(this);
         createEnemyAnimations(this);
 
-        // =========================
-        // MAP
-        // =========================
-        // Pass isMaster to MapManager so slave nodes can skip generating physics bodies!
+        // generate map (master handles physics)
         this.mapManager = new MapManager(this, this.isMaster);
         this.mapManager.buildMap();
 
-        // =========================
-        // WORLD BOUNDS
-        // =========================
-        // Only the master screen needs world bounds physics
+        // set bounds for master screen only
         if (this.isMaster) {
             this.matter.world.setBounds(
                 0,
@@ -60,11 +53,10 @@ export default class MainScene extends Phaser.Scene {
                 this.mapManager.widthInPixels,
                 this.mapManager.heightInPixels
             );
+            // console.log("bounds set for master");
         }
 
-        // =========================
-        // PLAYER
-        // =========================
+        // spawn player
         const spawnPoint = this.mapManager.getPlayerSpawnPoint();
         this.player = new Player(
             this,
@@ -73,25 +65,29 @@ export default class MainScene extends Phaser.Scene {
             'player'
         );
         this.player.setDepth(10);
-
-        // =========================
-        // ENEMIES
-        // =========================
+        
+        // hide player during spawn intro (master only)
         if (this.isMaster) {
-            /* 
-            for (let i = 0; i < 8; i++) {
-                // Spawn closely alongside the player for testing purposes
-                const ex = spawnPoint.x + Phaser.Math.Between(-80, 80);
-                const ey = spawnPoint.y + Phaser.Math.Between(-80, 80);
-                const enemy = new Enemy(this, ex, ey, 'enemy_goblin_torch_blue');
+            this.player.setVisible(false);
+        }
+
+        // fx manager
+        this.particleManager = new ParticleManager(this);
+
+        // load enemies on master
+        if (this.isMaster) {
+            const enemySpawns = this.mapManager.getEnemySpawnPoints();
+            
+            enemySpawns.forEach(spawn => {
+                const enemy = new Enemy(this, spawn.x, spawn.y, 'enemy_goblin_torch_blue');
                 enemy.setDepth(9);
                 enemy.setTarget(this.player);
                 this.enemies.push(enemy);
-            }
-            */
+            });
 
             events.on('player-attack', (attackingPlayer: Player) => {
                 const attackRange = 80;
+
                 this.enemies.forEach(enemy => {
                     if (enemy.isDead) return;
                     const dist = Phaser.Math.Distance.Between(attackingPlayer.x, attackingPlayer.y, enemy.x, enemy.y);
@@ -100,25 +96,23 @@ export default class MainScene extends Phaser.Scene {
                         const isEnemyRight = enemy.x > attackingPlayer.x;
                         if (facingRight === isEnemyRight) {
                             enemy.takeDamage(20);
+                            
+                            // blood fx
+                            this.particleManager.playBloodExplosion(enemy.x, enemy.y, 15);
                         }
                     }
                 });
             });
         }
 
-        // Matter.js handles collisions automatically between all
-        // bodies in the world — no manual collider pairing needed.
+        // matter.js handles collisions
 
-        // =========================
-        // UI
-        // =========================
+        // HUD
         if (this.isMaster) {
             this.scene.launch('UIScene');
         }
 
-        // =========================
-        // CAMERA & LIQUID GALAXY
-        // =========================
+        // setup camera & network
 
         const socketHost = window.location.hostname;
         this.socket = io(`http://${socketHost}:8128`);
@@ -130,8 +124,8 @@ export default class MainScene extends Phaser.Scene {
             this.mapManager.heightInPixels
         );
 
-        // We removed camera lerp (0.1, 0.1) because in a pixel-art zoomed game, 
-        // floating-point camera trailing causes the player sprite to look blurry or ghosted!
+        // follow player (no lerp to avoid pixel blur)
+        // tried lerp 0.1 but it looked weird af
         this.cameras.main.startFollow(this.player, true);
         this.cameras.main.setZoom(2);
 
@@ -156,11 +150,7 @@ export default class MainScene extends Phaser.Scene {
             default:
                 screenMultiplier = 0;
         }
-        // this.game.set
-        // Calculate the world-space offset needed per screen.
-        // Since the camera is zoomed in, the actual visible world width is (width / zoom).
-        // A positive screenMultiplier (like lg2) means the screen is to the right of the master.
-        // To move the camera's center to the right, we must offset the target (player) to the left (negative).
+        // lg offsets
         const calculateLGOffset = () => {
             const visibleWorldWidth = this.cameras.main.width / this.cameras.main.zoom;
             const lgOffsetX = -(screenMultiplier * visibleWorldWidth);
@@ -219,13 +209,23 @@ export default class MainScene extends Phaser.Scene {
             });
         }
 
-        // =========================
-        // LORE DIALOGUE ON SPAWN
-        // =========================
+        // intro sequence
+        // FIXME: find a way to skip this while testing
         if (this.isMaster) {
             // Fade in from black over 2 seconds
             this.cameras.main.fadeIn(2000, 0, 0, 0);
 
+            // wait for fade then play dust
+            this.time.delayedCall(500, () => {
+                // play dust and show player
+                this.particleManager.playSpawnDust(this.player.x, this.player.y);
+                
+                this.time.delayedCall(300, () => {
+                    this.player.setVisible(true);
+                });
+            });
+
+            // Show dialogue when fade completes
             this.time.delayedCall(2000, () => {
                 events.emit('show-dialog', [
                     { speaker: 'The Awakened', text: "...Ugh. My head. How long have I been asleep?" },
@@ -248,7 +248,7 @@ export default class MainScene extends Phaser.Scene {
             
             const currentAnim = this.player.anims.currentAnim?.key;
             
-            // Only emit network updates if the player has actually moved or changed state!
+            // send sync data if changed
             if (
                 this.player.x !== this.lastEmitData.x ||
                 this.player.y !== this.lastEmitData.y ||
@@ -266,7 +266,7 @@ export default class MainScene extends Phaser.Scene {
                 this.lastEmitData = emitData;
             }
 
-            // Clean up dead enemies from array
+            // remove dead enemies
             this.enemies = this.enemies.filter(enemy => !enemy.isDead || enemy.active);
 
             this.enemies.forEach(enemy => {
@@ -293,6 +293,7 @@ export default class MainScene extends Phaser.Scene {
                         isDead: enemy.isDead
                     };
                     
+                    // emit it
                     this.socket.emit('enemy_update', enemyEmitData);
                     this.enemiesLastEmitData[enemy.id] = enemyEmitData;
                 }

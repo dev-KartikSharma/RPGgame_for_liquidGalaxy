@@ -3,6 +3,7 @@ import {
     TILESETS,
     MAPS,
     ASEPRITES,
+    SPRITESHEETS,
     UI_ASSETS
 } from '../constants/assetsKeys';
 
@@ -14,9 +15,7 @@ export default class PreloaderScene extends Phaser.Scene {
 
     preload() {
 
-        // =========================
-        // TILESETS
-        // =========================
+        // load tilesets
 
         TILESETS.forEach(asset => {
 
@@ -27,9 +26,17 @@ export default class PreloaderScene extends Phaser.Scene {
 
         });
 
-        // =========================
-        // ASEPRITE ANIMATIONS
-        // =========================
+        // spritesheets
+        
+        SPRITESHEETS.forEach(asset => {
+            this.load.spritesheet(
+                asset.key,
+                asset.path,
+                { frameWidth: asset.frameWidth, frameHeight: asset.frameHeight }
+            );
+        });
+
+        // aseprite animations
 
         ASEPRITES.forEach(asset => {
 
@@ -41,9 +48,7 @@ export default class PreloaderScene extends Phaser.Scene {
 
         });
 
-        // =========================
-        // MAPS
-        // =========================
+        // maps
 
         MAPS.forEach(map => {
 
@@ -54,9 +59,7 @@ export default class PreloaderScene extends Phaser.Scene {
 
         });
 
-        // =========================
-        // UI ASSETS
-        // =========================
+        // ui assets
         this.load.tilemapTiledJSON('ui_map', 'maps/ui_map.json');
         this.load.tilemapTiledJSON('pause_menu', 'maps/pause_menu.json');
 
