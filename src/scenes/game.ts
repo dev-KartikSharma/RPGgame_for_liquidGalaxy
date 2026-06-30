@@ -131,24 +131,18 @@ export default class MainScene extends Phaser.Scene {
 
         // Custom LG Layout: lg4 -> lg5 -> lg1 -> lg2 -> lg3
         let screenMultiplier = 0;
-        switch (this.screenNum) {
-            case 4:
-                screenMultiplier = -2; // Far Left
-                break;
-            case 5:
-                screenMultiplier = -1; // Mid Left
-                break;
-            case 1:
-                screenMultiplier = 0;  // Center (Master)
-                break;
-            case 2:
-                screenMultiplier = 1;  // Mid Right
-                break;
-            case 3:
-                screenMultiplier = 2;  // Far Right
-                break;
-            default:
-                screenMultiplier = 0;
+        if (this.screenNum === 4) {
+            screenMultiplier = -2; // Far Left
+        } else if (this.screenNum === 5) {
+            screenMultiplier = -1; // Mid Left
+        } else if (this.screenNum === 1) {
+            screenMultiplier = 0;  // Center (Master)
+        } else if (this.screenNum === 2) {
+            screenMultiplier = 1;  // Mid Right
+        } else if (this.screenNum === 3) {
+            screenMultiplier = 2;  // Far Right
+        } else {
+            screenMultiplier = 0;
         }
         // lg offsets
         const calculateLGOffset = () => {

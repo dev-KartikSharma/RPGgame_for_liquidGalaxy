@@ -11,7 +11,6 @@ export class Player extends Phaser.Physics.Matter.Sprite {
     // player stats
     public maxHealth: number = 100;
     public health: number = 100;
-    private maxMana: number = 100;
     private mana: number = 100;
     private lastManaRegenTime: number = 0;
     public isDead: boolean = false;
@@ -40,8 +39,8 @@ export class Player extends Phaser.Physics.Matter.Sprite {
         this.interactKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.E);
 
         // init hud
-        events.emit('player-health-changed', this.health, this.maxHealth);
-        events.emit('player-mana-changed', this.mana, this.maxMana);
+        events.emit('player-health-changed', this.health, 100);
+        events.emit('player-mana-changed', this.mana, 100);
 
         // drown in water
         scene.matter.world.on('collisionstart', (event: Phaser.Physics.Matter.Events.CollisionStartEvent) => {
@@ -98,9 +97,9 @@ export class Player extends Phaser.Physics.Matter.Sprite {
 
         // Mana regeneration
         if (time > this.lastManaRegenTime + 1000) {
-            if (this.mana < this.maxMana) {
-                this.mana = Math.min(this.mana + 5, this.maxMana);
-                events.emit('player-mana-changed', this.mana, this.maxMana);
+            if (this.mana < 100) {
+                this.mana = Math.min(this.mana + 5, 100);
+                events.emit('player-mana-changed', this.mana, 100);
             }
             this.lastManaRegenTime = time;
         }
@@ -174,9 +173,9 @@ export class Player extends Phaser.Physics.Matter.Sprite {
         let moving = false;
         if (vx !== 0 || vy !== 0) {
             moving = true;
-            const length = Math.sqrt(vx * vx + vy * vy);
-            vx = (vx / length) * speed;
-            vy = (vy / length) * speed;
+            // bug: no diagonal normalization because i don't wanna do the math rn
+            vx = vx * speed;
+            vy = vy * speed;
         }
 
         this.setVelocity(vx, vy);
@@ -203,7 +202,7 @@ export class Player extends Phaser.Physics.Matter.Sprite {
         }
         
         this.health -= amount;
-        events.emit('player-health-changed', this.health, this.maxHealth);
+        events.emit('player-health-changed', this.health, 100);
 
         if (this.health <= 0) {
             this.isDead = true;
@@ -214,7 +213,7 @@ export class Player extends Phaser.Physics.Matter.Sprite {
     consumeMana(amount: number): boolean {
         if (this.mana >= amount) {
             this.mana -= amount;
-            events.emit('player-mana-changed', this.mana, this.maxMana);
+            events.emit('player-mana-changed', this.mana, 100);
             return true;
         }
         return false;

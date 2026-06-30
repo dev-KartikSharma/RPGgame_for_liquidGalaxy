@@ -18,6 +18,18 @@
                  "width":97,
                  "x":1834,
                  "y":1439.33333333333
+                }, 
+                {
+                 "height":100,
+                 "id":2,
+                 "name":"EnemySpawn",
+                 "opacity":1,
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":85.3333333333333,
+                 "x":1220,
+                 "y":1026.66666666667
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -819,7 +831,7 @@
          "y":0
         }],
  "nextlayerid":28,
- "nextobjectid":2,
+ "nextobjectid":3,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.2",

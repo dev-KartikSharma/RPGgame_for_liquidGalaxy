@@ -6,11 +6,7 @@ export class Enemy extends Phaser.Physics.Matter.Sprite {
     public isDead: boolean = false;
     private target: Player | null = null;
     private speed: number = 1.5;
-    private attackRange: number = 40;
-    private aggroRange: number = 300;
     private lastAttackTime: number = 0;
-    private attackCooldown: number = 1500;
-    private attackDamage: number = 5;
     public id: string;
 
     constructor(scene: Phaser.Scene, x: number, y: number, texture: string, frame?: string | number) {
@@ -40,7 +36,9 @@ export class Enemy extends Phaser.Physics.Matter.Sprite {
             return;
         }
 
-        if (this.isDead) return;
+        if (this.isDead == true) {
+            return;
+        }
 
         const currentAnim = this.anims.currentAnim?.key;
 
@@ -52,7 +50,7 @@ export class Enemy extends Phaser.Physics.Matter.Sprite {
             return;
         }
 
-        if (!this.target || this.target.isDead) {
+        if (!this.target || this.target.isDead == true) {
             this.setVelocity(0, 0);
             this.play('enemy_idle', true);
             return;
@@ -60,22 +58,22 @@ export class Enemy extends Phaser.Physics.Matter.Sprite {
 
         const dist = Phaser.Math.Distance.Between(this.x, this.y, this.target.x, this.target.y);
 
-        if (dist > this.aggroRange) {
+        if (dist > 300) {
             this.setVelocity(0, 0);
             this.play('enemy_idle', true);
             return;
         }
 
-        if (dist <= this.attackRange) {
+        if (dist <= 40) {
             this.setVelocity(0, 0);
-            if (time > this.lastAttackTime + this.attackCooldown) {
+            if (time > this.lastAttackTime + 1500) {
                 this.play('enemy_attack', true);
                 this.lastAttackTime = time;
                 
                 // deal damage mid-anim
                 this.scene.time.delayedCall(300, () => {
-                    if (!this.isDead && !this.target?.isDead && Phaser.Math.Distance.Between(this.x, this.y, this.target!.x, this.target!.y) <= this.attackRange + 20) {
-                        this.target!.takeDamage(this.attackDamage);
+                    if (this.isDead == false && this.target?.isDead == false && Phaser.Math.Distance.Between(this.x, this.y, this.target!.x, this.target!.y) <= 40 + 20) {
+                        this.target!.takeDamage(5);
                     }
                 });
             } else {
