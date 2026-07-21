@@ -1,103 +1,117 @@
-import Phaser from 'phaser';
-import { InventoryManager } from '../managers/InventoryManager';
+import Phaser from "phaser";
+import { InventoryManager } from "../managers/InventoryManager";
 
 export class InventoryUI {
-    private scene: Phaser.Scene;
-    private manager: InventoryManager;
-    private container: Phaser.GameObjects.Container;
-    
-    public isVisible: boolean = false;
+  private scene: Phaser.Scene;
+  private manager: InventoryManager;
+  private container: Phaser.GameObjects.Container;
 
-    constructor(scene: Phaser.Scene, manager: InventoryManager) {
-        this.scene = scene;
-        this.manager = manager;
+  public isVisible: boolean = false;
 
-        this.container = scene.add.container(0, 0).setVisible(false);
+  constructor(scene: Phaser.Scene, manager: InventoryManager) {
+    this.scene = scene;
+    this.manager = manager;
 
-        this.resize(scene.scale.width / 2, scene.scale.height / 2); // Initial layout
+    this.container = scene.add.container(0, 0).setVisible(false);
 
-        // Background
-        const bg = scene.add.image(0, 0, 'paper_bg').setScale(2);
-        this.container.add(bg);
+    this.resize(scene.scale.width / 2, scene.scale.height / 2); // Initial layout
 
-        // Title
-        const title = scene.add.text(0, -150, 'INVENTORY', {
-            fontSize: '32px',
-            color: '#000',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-        this.container.add(title);
+    // Background
+    const bg = scene.add.image(0, 0, "paper_bg").setScale(2);
+    this.container.add(bg);
 
-        // Grid (4x4)
-        const startX = -120;
-        const startY = -80;
-        const spacing = 80;
+    // Title
+    const title = scene.add
+      .text(0, -150, "INVENTORY", {
+        fontSize: "32px",
+        color: "#000",
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5);
+    this.container.add(title);
 
-        for (let i = 0; i < 16; i++) {
-            const row = Math.floor(i / 4);
-            const col = i % 4;
-            const x = startX + col * spacing;
-            const y = startY + row * spacing;
+    // List View Layout (8 slots)
+    const startX = 0;
+    const startY = -80;
+    const spacingY = 55;
 
-            // Slot bg
-            const slotBg = scene.add.rectangle(x, y, 64, 64, 0xaaaaaa, 0.5).setStrokeStyle(2, 0x000000);
-            this.container.add(slotBg);
-        }
+    for (let i = 0; i < 8; i++) {
+      const y = startY + i * spacingY;
 
-        this.drawItems();
+      // Wide Slot bg for list item
+      const slotBg = scene.add
+        .rectangle(startX, y, 280, 50, 0xaaaaaa, 0.3)
+        .setStrokeStyle(2, 0x000000);
+      this.container.add(slotBg);
     }
 
-    public toggle() {
-        this.isVisible = !this.isVisible;
-        this.container.setVisible(this.isVisible);
+    this.drawItems();
+  }
 
-        if (this.isVisible) {
-            this.drawItems();
-            // Pause game when inventory is open
-            this.scene.scene.pause('Game');
-        } else {
-            // Resume game
-            this.scene.scene.resume('Game');
-        }
+  public toggle() {
+    this.isVisible = !this.isVisible;
+    this.container.setVisible(this.isVisible);
+
+    if (this.isVisible) {
+      this.drawItems();
+      // Pause game when inventory is open
+      this.scene.scene.pause("Game");
+    } else {
+      // Resume game
+      this.scene.scene.resume("Game");
     }
+  }
 
-    public resize(logicalWidth: number, logicalHeight: number) {
-        this.container.setPosition(logicalWidth / 2, logicalHeight / 2);
-    }
+  public resize(logicalWidth: number, logicalHeight: number) {
+    this.container.setPosition(logicalWidth / 2, logicalHeight / 2);
+  }
 
-    private drawItems() {
-        // Remove old item icons from container
-        // We can tag them to easily find and remove them
-        this.container.each((child: any) => {
-            if (child.isItemIcon) {
-                child.destroy();
-            }
-        });
+  private drawItems() {
+    // Remove old item icons from container
+    this.container.each((child: any) => {
+      if (child.isItemIcon) {
+        child.destroy();
+      }
+    });
 
-        const startX = -120;
-        const startY = -80;
-        const spacing = 80;
+    const startX = 0;
+    const startY = -80;
+    const spacingY = 55;
 
-        this.manager.items.forEach((item, index) => {
-            const row = Math.floor(index / 4);
-            const col = index % 4;
-            const x = startX + col * spacing;
-            const y = startY + row * spacing;
+    this.manager.items.forEach((item, index) => {
+      if (index >= 8) return; // Prevent overflow in UI
 
-            const icon = this.scene.add.image(x, y, item.iconKey).setScale(1.5);
-            (icon as any).isItemIcon = true;
-            this.container.add(icon);
+      const y = startY + index * spacingY;
+      const iconX = startX - 110;
 
-            if (item.quantity > 1) {
-                const qtyText = this.scene.add.text(x + 10, y + 10, item.quantity.toString(), {
-                    fontSize: '16px',
-                    color: '#fff',
-                    stroke: '#000',
-                    strokeThickness: 3
-                });
-                (qtyText as any).isItemIcon = true;
-                this.container.add(qtyText);
-            }
-        });
-    }
+      const icon = this.scene.add.image(iconX, y, item.iconKey);
+      // Scale icon so it fits nicely in the 50px high row
+      icon.setScale(40 / Math.max(icon.width, icon.height));
+      (icon as any).isItemIcon = true;
+      this.container.add(icon);
+
+      // Item Name
+      const nameText = this.scene.add
+        .text(iconX + 35, y, item.name, {
+          fontSize: "20px",
+          color: "#333",
+          fontStyle: "bold",
+        })
+        .setOrigin(0, 0.5);
+      (nameText as any).isItemIcon = true;
+      this.container.add(nameText);
+
+      // Item Quantity
+      const qtyText = this.scene.add
+        .text(startX + 110, y, "x" + item.quantity, {
+          fontSize: "22px",
+          color: "#fff",
+          stroke: "#000",
+          strokeThickness: 4,
+        })
+        .setOrigin(0.5, 0.5);
+      (qtyText as any).isItemIcon = true;
+      this.container.add(qtyText);
+    });
+  }
 }
