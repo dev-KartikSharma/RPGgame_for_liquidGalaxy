@@ -25,7 +25,7 @@ export default class MainMenuScene extends Phaser.Scene {
 
     if (isMaster) {
       // Title Text
-      const titleText = this.add
+      this.add
         .text(width / 2, height / 3, "RPG GAME", {
           fontSize: "64px",
           color: "#fff",
@@ -35,15 +35,7 @@ export default class MainMenuScene extends Phaser.Scene {
         })
         .setOrigin(0.5);
 
-      // Floating animation for title
-      this.tweens.add({
-        targets: titleText,
-        y: titleText.y - 10,
-        duration: 2000,
-        yoyo: true,
-        repeat: -1,
-        ease: "Sine.easeInOut",
-      });
+
 
       // Start Button (Clean Native Rectangle to avoid 9-slice glitches)
       const buttonBg = this.add
@@ -88,6 +80,51 @@ export default class MainMenuScene extends Phaser.Scene {
         buttonBg.setY(originalY);
         startText.setY(originalY);
         this.startGame();
+      });
+
+      // Settings Button
+      const settingsBg = this.add
+        .rectangle(width / 2, height / 2 + 130, 240, 60, 0x0055aa, 0.9)
+        .setStrokeStyle(2, 0xffffff)
+        .setInteractive({ useHandCursor: true });
+
+      const settingsText = this.add
+        .text(width / 2, height / 2 + 130, "Settings", {
+          fontSize: "28px",
+          color: "#fff",
+          fontStyle: "bold",
+        })
+        .setOrigin(0.5);
+
+      settingsBg.on("pointerover", () => {
+        settingsBg.setFillStyle(0x0077ff, 1);
+        this.tweens.add({
+          targets: [settingsBg, settingsText],
+          scale: 1.05,
+          duration: 100,
+        });
+      });
+
+      settingsBg.on("pointerout", () => {
+        settingsBg.setFillStyle(0x0055aa, 0.9);
+        this.tweens.add({
+          targets: [settingsBg, settingsText],
+          scale: 1.0,
+          duration: 100,
+        });
+      });
+
+      const settingsOriginalY = height / 2 + 130;
+
+      settingsBg.on("pointerdown", () => {
+        settingsBg.setY(settingsOriginalY + 4);
+        settingsText.setY(settingsOriginalY + 4);
+      });
+
+      settingsBg.on("pointerup", () => {
+        settingsBg.setY(settingsOriginalY);
+        settingsText.setY(settingsOriginalY);
+        this.scene.launch("PauseMenuScene");
       });
     } else {
       // Slave Screen Waiting State

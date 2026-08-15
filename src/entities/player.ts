@@ -6,7 +6,7 @@ export class Player extends Phaser.Physics.Matter.Sprite {
   private wasd: any;
   private attackKey: Phaser.Input.Keyboard.Key;
   private guardKey: Phaser.Input.Keyboard.Key;
-  private interactKey: Phaser.Input.Keyboard.Key;
+
 
   // player stats
   public maxHealth: number = 100;
@@ -46,9 +46,6 @@ export class Player extends Phaser.Physics.Matter.Sprite {
     this.guardKey = scene.input.keyboard!.addKey(
       Phaser.Input.Keyboard.KeyCodes.SHIFT,
     );
-    this.interactKey = scene.input.keyboard!.addKey(
-      Phaser.Input.Keyboard.KeyCodes.E,
-    );
 
     // init hud
     events.emit("player-health-changed", this.health, 100);
@@ -70,10 +67,15 @@ export class Player extends Phaser.Physics.Matter.Sprite {
           if (isPlayer && isWater) {
             this.inWaterCount++;
             if (this.inWaterCount === 1) {
-              this.waterDeathTimer = scene.time.delayedCall(200, () => {
-                if (!this.isDead && this.inWaterCount > 0) {
-                  this.dieInWater();
-                }
+              this.takeDamage(20);
+              this.waterDeathTimer = scene.time.addEvent({
+                delay: 600,
+                callback: () => {
+                  if (!this.isDead && this.inWaterCount > 0) {
+                    this.takeDamage(20);
+                  }
+                },
+                loop: true
               });
             }
           }
@@ -171,10 +173,7 @@ export class Player extends Phaser.Physics.Matter.Sprite {
       // console.log("took 10 damage manually");
     }
 
-    // Interaction
-    if (Phaser.Input.Keyboard.JustDown(this.interactKey)) {
-      events.emit("interact", this);
-    }
+    // Interaction removed from here to prevent consuming the JustDown flag before game.ts can check it
 
     if (leftDown) {
       vx = -1;
@@ -214,7 +213,7 @@ export class Player extends Phaser.Physics.Matter.Sprite {
   }
 
   takeDamage(amount: number) {
-    if (this.isDead) return;
+    if (this.isDead || (this.scene as any).transitioning) return;
     // console.log(`player took ${amount} damage, health is now ${this.health - amount}`);
 
     // block damage if guarding
@@ -225,9 +224,19 @@ export class Player extends Phaser.Physics.Matter.Sprite {
     this.health -= amount;
     events.emit("player-health-changed", this.health, 100);
 
+    // damage flash
+    this.setTint(0xff0000);
+    this.scene.time.delayedCall(100, () => {
+      if (this.active) this.clearTint();
+    });
+
     if (this.health <= 0) {
-      this.isDead = true;
-      // handle death
+      if (this.inWaterCount > 0) {
+        this.dieInWater();
+      } else {
+        this.isDead = true;
+        events.emit("player-died", this);
+      }
     }
   }
 
@@ -241,7 +250,7 @@ export class Player extends Phaser.Physics.Matter.Sprite {
   }
 
   dieInWater() {
-    if (this.isDead) return;
+    if (this.isDead || (this.scene as any).transitioning) return;
     this.isDead = true;
     this.setVelocity(0, 0);
     this.setIgnoreGravity(true);

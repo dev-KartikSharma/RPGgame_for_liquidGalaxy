@@ -2,8 +2,10 @@ import Phaser from "phaser";
 import { io } from "socket.io-client";
 import { createPlayerAnimations } from "../animations/playeranimation";
 import { createEnemyAnimations } from "../animations/enemyanimation";
+import { createNpcAnimations } from "../animations/npcanimation";
 import { Player } from "../entities/player";
 import { Enemy } from "../entities/enemy";
+import { Npc } from "../entities/npc";
 import { MapManager } from "../managers/MapManager";
 import { ParticleManager } from "../managers/ParticleManager";
 import { events } from "../managers/EventManager";
@@ -19,6 +21,7 @@ export default class MainScene extends Phaser.Scene {
   private lastEmitData: any = {};
   private enemies: Enemy[] = [];
   private enemiesLastEmitData: { [id: string]: any } = {};
+  private npcs: Npc[] = [];
   private coins: {
     id: string;
     sprite: Phaser.GameObjects.Image;
@@ -26,11 +29,12 @@ export default class MainScene extends Phaser.Scene {
   }[] = [];
   private castleMsgShown: boolean = false;
   private towerMsgShown: boolean = false;
+  private isDialogActive: boolean = false;
   private castleLocation: { x: number; y: number } | null = null;
   private towerLocation: { x: number; y: number } | null = null;
 
-  private interactKey!: Phaser.Input.Keyboard.Key;
   private interactPrompt!: Phaser.GameObjects.Text;
+  private interactKey!: Phaser.Input.Keyboard.Key;
   private castleSparkle?: Phaser.GameObjects.Particles.ParticleEmitter;
   private towerSparkle?: Phaser.GameObjects.Particles.ParticleEmitter;
 
@@ -43,6 +47,7 @@ export default class MainScene extends Phaser.Scene {
   }[] = [];
 
   private currentMapKey: string = "map";
+  private currentSpawnName: string | null = null;
 
   constructor() {
     super("Game");
@@ -54,15 +59,29 @@ export default class MainScene extends Phaser.Scene {
     } else {
       this.currentMapKey = "map";
     }
+    
+    if (data && data.spawnName) {
+      this.currentSpawnName = data.spawnName;
+    } else {
+      this.currentSpawnName = null;
+    }
+    
     (this as any).transitioning = false;
 
     // Clean up events from previous runs to prevent duplicate listeners
     events.off("player-attack");
     events.off("show-dialog");
     events.off("enemy-died");
+    events.off("player-died");
   }
 
   create() {
+    // Always ensure the scene is fully running — it may have been paused
+    // by the death screen or a map transition before scene.restart() was called.
+    // scene.restart() on a paused scene keeps it paused, so we force-resume here.
+    this.scene.resume();
+    this.matter.world.resume();
+
     // lg screen setup
     // TODO: test if this works on actual setup instead of localhost
     const urlParams = new URLSearchParams(window.location.search);
@@ -77,6 +96,7 @@ export default class MainScene extends Phaser.Scene {
     // animations
     createPlayerAnimations(this);
     createEnemyAnimations(this);
+    createNpcAnimations(this);
 
     // generate map (master handles physics)
     this.mapManager = new MapManager(this, this.isMaster, this.currentMapKey);
@@ -94,26 +114,45 @@ export default class MainScene extends Phaser.Scene {
     }
 
     // spawn player
-    const spawnPoint = this.mapManager.getPlayerSpawnPoint();
+    const spawnPoint = this.mapManager.getPlayerSpawnPoint(this.currentSpawnName);
     this.player = new Player(this, spawnPoint.x, spawnPoint.y, "player");
     this.player.setDepth(500);
 
-    // hide player during spawn intro (master only)
-    if (this.isMaster) {
-      this.player.setVisible(false);
-    }
+
 
     // fx manager
     this.particleManager = new ParticleManager(this);
+
+    // Spawn NPCs (Both master and slaves)
+    const npcSpawns = this.mapManager.getNpcSpawnPoints();
+    npcSpawns.forEach((spawn) => {
+      const npc = new Npc(
+        this,
+        spawn.x,
+        spawn.y,
+        "pawn_idle",
+        [
+          { speaker: "Survivor", text: "You... you aren't one of them, are you? Thank the stars." },
+          { speaker: "Survivor", text: "I came to this old mine hoping to scavenge some gold, but the Eclipse ruined it all. The goblins have completely taken over." },
+          { speaker: "Survivor", text: "I'm too terrified to move... if they spot me, I'm dead. You look like you can fight, though." },
+          { speaker: "Survivor", text: "If you want to live, head south out of these woods. The Blue Banner has set up protection in the village down there." }
+        ]
+      );
+      if (!this.isMaster) {
+        (npc as any).isLGSlave = true;
+      }
+      npc.setDepth(498);
+      this.npcs.push(npc);
+    });
 
     // load enemies on master
     if (this.isMaster) {
       this.castleLocation = this.mapManager.getPointOfInterest("BrokenCastle");
       this.towerLocation = this.mapManager.getPointOfInterest("BrokenTower");
 
-      this.interactKey = this.input.keyboard!.addKey("F");
+      this.interactKey = this.input.keyboard!.addKey("E");
       this.interactPrompt = this.add
-        .text(0, 0, "[F] Inspect", {
+        .text(0, 0, "[E] Inspect", {
           fontSize: "12px",
           color: "#ffffff",
           backgroundColor: "#000000aa",
@@ -122,6 +161,15 @@ export default class MainScene extends Phaser.Scene {
         .setOrigin(0.5)
         .setVisible(false)
         .setDepth(9999);
+
+      events.on("show-dialog", () => {
+        this.isDialogActive = true;
+      });
+      events.on("dialog-closed", () => {
+        this.time.delayedCall(50, () => {
+          this.isDialogActive = false;
+        });
+      });
 
       if (this.castleLocation) {
         this.castleSparkle = this.particleManager.createInteractSparkle(
@@ -192,18 +240,16 @@ export default class MainScene extends Phaser.Scene {
               if (otherBody.label === "transition") {
                 (this as any).transitioning = true;
                 const targetMap = (otherBody as any).targetMap;
-                console.log("Transitioning to map:", targetMap);
-
-                this.cameras.main.fadeOut(1000, 0, 0, 0);
-                this.cameras.main.once("camerafadeoutcomplete", () => {
-                  if (this.socket) this.socket.disconnect();
-                  this.socket = null; // Clean up socket before restart
-                  this.scene.restart({ mapKey: targetMap });
-                });
+                const spawnName = (otherBody as any).spawnName;
+                console.log("Transitioning to map:", targetMap, "spawnName:", spawnName);
 
                 if (this.socket) {
                   this.socket.emit("map_transition", { mapKey: targetMap });
                 }
+
+                if (this.socket) this.socket.disconnect();
+                this.socket = null;
+                this.scene.restart({ mapKey: targetMap, spawnName: spawnName });
               } else if (otherBody.label === "coin") {
                 const coinId = (otherBody as any).coinId;
                 const coinIndex = this.coins.findIndex((c) => c.id === coinId);
@@ -256,6 +302,11 @@ export default class MainScene extends Phaser.Scene {
             }
           }
         });
+      });
+
+      events.on("player-died", () => {
+        this.scene.pause();
+        this.scene.launch("DeathMenuScene");
       });
 
       events.on("enemy-died", (x: number, y: number) => {
@@ -408,62 +459,43 @@ export default class MainScene extends Phaser.Scene {
       this.socket.on("map_transition", (data: any) => {
         if ((this as any).transitioning) return;
         (this as any).transitioning = true;
-        this.cameras.main.fadeOut(1000, 0, 0, 0);
-        this.cameras.main.once("camerafadeoutcomplete", () => {
-          if (this.socket) this.socket.disconnect();
-          this.socket = null;
-          this.scene.restart({ mapKey: data.mapKey });
-        });
+        if (this.socket) this.socket.disconnect();
+        this.socket = null;
+        this.scene.restart({ mapKey: data.mapKey });
       });
     } else {
-      // Pause menu listener
+      // Pause menu listener — blocked while the scene is loading (isLoading flag)
       this.input.keyboard!.on("keydown-ESC", () => {
+        if ((this as any).isLoading) return;
         this.scene.pause();
         this.scene.launch("PauseMenuScene");
       });
     }
 
-    // intro sequence
-    // FIXME: find a way to skip this while testing
-    if (this.isMaster) {
-      // Fade in from black over 2 seconds
-      this.cameras.main.fadeIn(2000, 0, 0, 0);
-
-      // wait for fade then play dust
-      this.time.delayedCall(500, () => {
-        // play dust and show player
-        this.particleManager.playSpawnDust(this.player.x, this.player.y);
-
-        this.time.delayedCall(300, () => {
-          this.player.setVisible(true);
-        });
-      });
-
-      // Show dialogue when fade completes
-      this.time.delayedCall(2000, () => {
-        events.emit("show-dialog", [
-          {
-            speaker: "The Awakened",
-            text: "...Ugh. My head. How long have I been asleep?",
-          },
-          {
-            speaker: "The Awakened",
-            text: "The last thing I remember... the sky turning black, and the Great Castle falling. Then, nothing but darkness.",
-          },
-          {
-            speaker: "The Awakened",
-            text: "My armor... the blue crest of the River-Folk. I must be miles away from the Domain.",
-          },
-          {
-            speaker: "The Awakened",
-            text: "This forest feels... wrong. I can hear rustling in the bushes. I need to find a way out of these woods and figure out what happened to the kingdom.",
-          },
-          {
-            speaker: "System",
-            text: "Use W, A, S, D to move and SPACE to attack. Beware of the feral Goblins lurking in the trees!",
-          },
-        ]);
-      });
+    // Show opening dialogue on the initial map immediately
+    if (this.isMaster && this.currentMapKey === "map") {
+      events.emit("show-dialog", [
+        {
+          speaker: "The Awakened",
+          text: "...Ugh. My head. How long have I been asleep?",
+        },
+        {
+          speaker: "The Awakened",
+          text: "The last thing I remember... the sky turning black, and the Great Castle falling. Then, nothing but darkness.",
+        },
+        {
+          speaker: "The Awakened",
+          text: "My armor... the blue crest of the River-Folk. I must be miles away from the Domain.",
+        },
+        {
+          speaker: "The Awakened",
+          text: "This forest feels... wrong. I can hear rustling in the bushes. I need to find a way out of these woods and figure out what happened to the kingdom.",
+        },
+        {
+          speaker: "System",
+          text: "Use W, A, S, D to move and SPACE to attack. Beware of the feral Goblins lurking in the trees!",
+        },
+      ]);
     }
   }
 
@@ -477,6 +509,29 @@ export default class MainScene extends Phaser.Scene {
 
       let canInteractWithCastle = false;
       let canInteractWithTower = false;
+
+      let interactPressed = false;
+      if (!this.isDialogActive) {
+        interactPressed = Phaser.Input.Keyboard.JustDown(this.interactKey);
+      }
+
+      this.npcs.forEach((npc) => {
+        const dist = Phaser.Math.Distance.Between(
+          this.player.x,
+          this.player.y,
+          npc.x,
+          npc.y,
+        );
+        if (dist < 80 && !npc.hasSpoken) {
+          npc.setIndicatorVisible(true);
+          if (interactPressed) {
+            npc.hasSpoken = true;
+            events.emit("show-dialog", npc.dialogText);
+          }
+        } else {
+          npc.setIndicatorVisible(false);
+        }
+      });
 
       if (!this.castleMsgShown && this.castleLocation && this.castleSparkle) {
         if (
@@ -492,14 +547,14 @@ export default class MainScene extends Phaser.Scene {
             .setPosition(this.castleLocation.x, this.castleLocation.y - 30)
             .setVisible(true);
 
-          if (Phaser.Input.Keyboard.JustDown(this.interactKey)) {
+          if (interactPressed) {
             this.castleMsgShown = true;
             this.castleSparkle.stop();
             this.interactPrompt.setVisible(false);
             events.emit("show-dialog", [
               {
                 speaker: "The Awakened",
-                text: "This stonework... it used to be an outpost of the White Banner.",
+                text: "This stonework... it used to be an outpost of the Blue Banner.",
               },
               {
                 speaker: "The Awakened",
@@ -524,7 +579,7 @@ export default class MainScene extends Phaser.Scene {
             .setPosition(this.towerLocation.x, this.towerLocation.y - 30)
             .setVisible(true);
 
-          if (Phaser.Input.Keyboard.JustDown(this.interactKey)) {
+          if (interactPressed) {
             this.towerMsgShown = true;
             this.towerSparkle.stop();
             this.interactPrompt.setVisible(false);
@@ -602,6 +657,10 @@ export default class MainScene extends Phaser.Scene {
       this.enemies = this.enemies.filter(
         (enemy) => !enemy.isDead || enemy.active,
       );
+
+      this.npcs.forEach((npc) => {
+        npc.update();
+      });
 
       this.enemies.forEach((enemy) => {
         if (enemy.active) {

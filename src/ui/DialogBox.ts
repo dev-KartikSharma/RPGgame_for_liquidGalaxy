@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { events } from "../managers/EventManager";
 
 export interface DialogPage {
   speaker?: string;
@@ -54,7 +55,7 @@ export class DialogBox {
 
     // Prompt Text object
     this.promptTextObj = scene.add
-      .text(0, 0, "Press F to continue ▼", {
+      .text(0, 0, "Press E to continue ▼", {
         fontSize: "16px",
         color: "#aaaaaa",
         fontStyle: "italic",
@@ -81,7 +82,7 @@ export class DialogBox {
 
     // Click to advance/skip
     this.background.on("pointerdown", () => this.handleInput());
-    scene.input.keyboard!.on("keydown-F", () => this.handleInput());
+    scene.input.keyboard!.on("keydown-E", () => this.handleInput());
   }
 
   public resize(logicalWidth: number, logicalHeight: number) {
@@ -150,6 +151,7 @@ export class DialogBox {
     if (this.typeTimer) {
       this.typeTimer.remove();
     }
+    events.emit("dialog-closed");
   }
 
   private typeNextChar() {
