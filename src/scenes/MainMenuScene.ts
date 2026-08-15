@@ -149,6 +149,12 @@ export default class MainMenuScene extends Phaser.Scene {
       this.socket.on("start_game", () => {
         this.startGame();
       });
+
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+        if (this.socket) {
+          this.socket.off("start_game");
+        }
+      });
     }
   }
 

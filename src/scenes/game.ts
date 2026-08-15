@@ -387,8 +387,27 @@ export default class MainScene extends Phaser.Scene {
 
     calculateLGOffset();
 
-    this.scale.on("resize", () => {
-      calculateLGOffset();
+    this.scale.on("resize", calculateLGOffset);
+
+    // Clean up event listeners and sockets on scene shutdown
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      events.off("player-attack");
+      events.off("show-dialog");
+      events.off("dialog-closed");
+      events.off("enemy-died");
+      events.off("player-died");
+
+      this.scale.off("resize", calculateLGOffset);
+
+      if (this.socket) {
+        this.socket.off("player_update");
+        this.socket.off("enemy_update");
+        this.socket.off("coin_spawn");
+        this.socket.off("coin_pickup");
+        this.socket.off("map_transition");
+        this.socket.disconnect();
+        this.socket = null;
+      }
     });
 
     if (!this.isMaster) {
@@ -655,7 +674,7 @@ export default class MainScene extends Phaser.Scene {
 
       // remove dead enemies
       this.enemies = this.enemies.filter(
-        (enemy) => !enemy.isDead || enemy.active,
+        (enemy) => enemy.active && !enemy.isDead,
       );
 
       this.npcs.forEach((npc) => {
