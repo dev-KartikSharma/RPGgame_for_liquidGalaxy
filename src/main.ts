@@ -4,6 +4,7 @@ import MainMenuScene from "./scenes/MainMenuScene";
 import Game from "./scenes/game";
 import UIScene from "./scenes/UIScene";
 import PauseMenuScene from "./scenes/PauseMenuScene";
+import DeathMenuScene from "./scenes/DeathMenuScene";
 
 new Phaser.Game({
   type: Phaser.AUTO,
@@ -44,5 +45,5 @@ new Phaser.Game({
     },
   },
 
-  scene: [Preloader, MainMenuScene, Game, UIScene, PauseMenuScene],
+  scene: [Preloader, MainMenuScene, Game, UIScene, PauseMenuScene, DeathMenuScene],
 });

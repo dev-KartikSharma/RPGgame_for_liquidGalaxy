@@ -173,6 +173,8 @@ export class MapManager {
       (l) => !l.layer.name.toLowerCase().includes("water"),
     );
 
+    const transitions = this.getMapTransitions();
+
     for (let row = 0; row < this.map.height; row++) {
       for (let col = 0; col < this.map.width; col++) {
         const hasGround = nonWaterLayers.some((layer) => {
@@ -181,13 +183,21 @@ export class MapManager {
         });
 
         if (!hasGround) {
-          this.scene.matter.add.rectangle(
-            col * tileW + tileW / 2,
-            row * tileH + tileH / 2,
-            tileW,
-            tileH,
-            { isStatic: true, isSensor: true, label: "water" },
-          );
+          const tileRect = new Phaser.Geom.Rectangle(col * tileW, row * tileH, tileW, tileH);
+          const overlapsTransition = transitions.some(t => {
+              const tRect = new Phaser.Geom.Rectangle(t.x, t.y, t.width, t.height);
+              return Phaser.Geom.Intersects.RectangleToRectangle(tileRect, tRect);
+          });
+
+          if (!overlapsTransition) {
+            this.scene.matter.add.rectangle(
+              col * tileW + tileW / 2,
+              row * tileH + tileH / 2,
+              tileW,
+              tileH,
+              { isStatic: true, isSensor: true, label: "water" },
+            );
+          }
         }
       }
     }
@@ -218,12 +228,25 @@ export class MapManager {
     return this.map.heightInPixels;
   }
 
-  public getPlayerSpawnPoint(): { x: number; y: number } {
+  public getPlayerSpawnPoint(spawnName?: string | null): { x: number; y: number } {
     // Look for an object layer named 'Spawns' or 'spawns' (tiled is weird with caps)
     const spawnsLayer =
       this.map.getObjectLayer("Spawns") || this.map.getObjectLayer("spawns");
 
     if (spawnsLayer && spawnsLayer.objects) {
+      // If a specific spawnName is provided, look for it first
+      if (spawnName) {
+        const specificSpawn = spawnsLayer.objects.find(
+          (obj) => obj.name === spawnName,
+        );
+        if (specificSpawn) {
+          return {
+            x: specificSpawn.x ?? this.widthInPixels / 2,
+            y: specificSpawn.y ?? this.heightInPixels / 2,
+          };
+        }
+      }
+
       // Find an object named 'PlayerSpawn' or of type 'PlayerSpawn'
       const spawnPoint = spawnsLayer.objects.find(
         (obj) => obj.name === "PlayerSpawn" || obj.type === "PlayerSpawn",
@@ -258,6 +281,26 @@ export class MapManager {
     }
 
     return enemySpawns;
+  }
+
+  public getNpcSpawnPoints(): { x: number; y: number; type?: string }[] {
+    const spawnsLayer =
+      this.map.getObjectLayer("Spawns") || this.map.getObjectLayer("spawns");
+    const npcSpawns: { x: number; y: number; type?: string }[] = [];
+
+    if (spawnsLayer && spawnsLayer.objects) {
+      spawnsLayer.objects.forEach((obj) => {
+        if (obj.name === "NPCSpawn" || obj.type === "NPCSpawn") {
+          npcSpawns.push({
+            x: obj.x ?? 0,
+            y: obj.y ?? 0,
+            type: obj.type,
+          });
+        }
+      });
+    }
+
+    return npcSpawns;
   }
 
   public getPointOfInterest(name: string): { x: number; y: number } | null {

@@ -1,8 +1,9 @@
 import Phaser from "phaser";
 
 export class Npc extends Phaser.Physics.Matter.Sprite {
-  public dialogText: string | string[];
+  public dialogText: string | any[];
   public id: string;
+  public hasSpoken: boolean = false;
   private indicator: Phaser.GameObjects.Text;
   private showIndicator: boolean = false;
 
@@ -11,7 +12,7 @@ export class Npc extends Phaser.Physics.Matter.Sprite {
     x: number,
     y: number,
     texture: string,
-    dialogText: string | string[],
+    dialogText: string | any[],
   ) {
     super(scene.matter.world, x, y, texture);
 
@@ -25,20 +26,21 @@ export class Npc extends Phaser.Physics.Matter.Sprite {
     this.setFixedRotation();
     this.setStatic(true); // NPCs are static for now
 
+    if (texture === "pawn_idle") {
+      this.play("npc_idle");
+    }
+
     // Interaction indicator
     this.indicator = scene.add
-      .text(x, y - 40, "E", {
+      .text(x, y - 40, "[E] Talk", {
         fontSize: "12px",
-        color: "#000000",
-        backgroundColor: "#ffffff",
+        color: "#ffffff",
+        backgroundColor: "#000000aa",
         padding: { x: 4, y: 4 },
       })
       .setOrigin(0.5)
       .setDepth(100)
       .setVisible(false);
-
-    // Apply a tint to distinguish from player if using same texture
-    this.setTint(0x0088ff);
   }
 
   update() {

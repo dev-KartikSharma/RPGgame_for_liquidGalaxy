@@ -42,6 +42,12 @@ export const SPRITESHEETS = [
     frameWidth: 128,
     frameHeight: 128,
   },
+  {
+    key: "pawn_idle",
+    path: "npc/pawn_idle.png",
+    frameWidth: 192,
+    frameHeight: 192,
+  },
 ];
 
 export const TILESETS = [
@@ -95,6 +101,16 @@ export const TILESETS = [
     key: "master_clouds",
     path: "terrain/deco/clouds/master_clouds.png",
   },
+  {
+    tiledName: "master_tileset_buildings",
+    key: "master_tileset_buildings_safevillage",
+    path: "buildings/master_tileset_buildings.png",
+  },
+  {
+    tiledName: "rubber_duck",
+    key: "rubber_duck",
+    path: "terrain/deco/rubber_duck/rubber_duck.png",
+  },
 ];
 
 export const MAPS = [
@@ -109,6 +125,10 @@ export const MAPS = [
   {
     key: "lurelin_map",
     path: "maps/lurelin.json",
+  },
+  {
+    key: "safevillage",
+    path: "maps/safevillage.json",
   },
 ];
 
