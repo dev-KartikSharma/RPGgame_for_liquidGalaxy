@@ -375,11 +375,15 @@ export class MapManager {
         const spawnName = obj.properties?.find(
           (p: any) => p.name === "spawnName",
         )?.value;
-        if (targetMap) {
-          // Help user if they typed .json in Tiled
-          if (targetMap.endsWith(".json")) {
-            targetMap = targetMap.replace(".json", "_map");
-          }
+          if (targetMap) {
+            // Clean filename if user typed file extension in Tiled
+            if (targetMap.endsWith(".json")) {
+              targetMap = targetMap.replace(".json", "");
+            }
+            // Map legacy or shorthand names to asset keys
+            if (targetMap === "spawn") {
+              targetMap = "map";
+            }
 
           transitions.push({
             x: obj.x ?? 0,

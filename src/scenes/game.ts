@@ -495,9 +495,11 @@ export default class MainScene extends Phaser.Scene {
     } else {
       // Pause menu listener — blocked while the scene is loading (isLoading flag)
       this.input.keyboard!.on("keydown-ESC", () => {
-        if ((this as any).isLoading) return;
-        this.scene.pause();
-        this.scene.launch("PauseMenuScene");
+        if ((this as any).isLoading || (this as any).transitioning) return;
+        if (this.scene.isActive("Game")) {
+          this.scene.pause();
+          this.scene.launch("PauseMenuScene");
+        }
       });
     }
 
