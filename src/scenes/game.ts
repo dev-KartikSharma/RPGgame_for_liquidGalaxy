@@ -399,6 +399,16 @@ export default class MainScene extends Phaser.Scene {
 
       this.scale.off("resize", calculateLGOffset);
 
+      if (this.castleSparkle) {
+        this.castleSparkle.destroy();
+        this.castleSparkle = undefined;
+      }
+      if (this.towerSparkle) {
+        this.towerSparkle.destroy();
+        this.towerSparkle = undefined;
+      }
+      this.matter.world.off("collisionstart");
+
       if (this.socket) {
         this.socket.off("player_update");
         this.socket.off("enemy_update");
