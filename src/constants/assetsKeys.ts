@@ -123,10 +123,6 @@ export const MAPS = [
     path: "maps/start_menu.json",
   },
   {
-    key: "lurelin_map",
-    path: "maps/lurelin.json",
-  },
-  {
     key: "safevillage",
     path: "maps/safevillage.json",
   },
