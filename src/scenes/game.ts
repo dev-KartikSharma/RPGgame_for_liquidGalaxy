@@ -68,6 +68,13 @@ export default class MainScene extends Phaser.Scene {
     
     (this as any).transitioning = false;
 
+    // Reset entity collections to prevent stale references on restart
+    this.enemies = [];
+    this.npcs = [];
+    this.coins = [];
+    this.enemiesLastEmitData = {};
+    this.lastEmitData = {};
+
     // Clean up events from previous runs to prevent duplicate listeners
     events.off("player-attack");
     events.off("show-dialog");
@@ -407,7 +414,9 @@ export default class MainScene extends Phaser.Scene {
         this.towerSparkle.destroy();
         this.towerSparkle = undefined;
       }
-      this.matter.world.off("collisionstart");
+      if (this.matter && this.matter.world) {
+        this.matter.world.off("collisionstart");
+      }
 
       if (this.socket) {
         this.socket.off("player_update");
@@ -547,6 +556,8 @@ export default class MainScene extends Phaser.Scene {
       }
 
       this.npcs.forEach((npc) => {
+        if (!npc || !npc.active || !this.player || !this.player.active) return;
+
         const dist = Phaser.Math.Distance.Between(
           this.player.x,
           this.player.y,
@@ -680,7 +691,9 @@ export default class MainScene extends Phaser.Scene {
           flipX: this.player.flipX,
         };
 
-        this.socket.emit("player_update", emitData);
+        if (this.socket) {
+          this.socket.emit("player_update", emitData);
+        }
         this.lastEmitData = emitData;
       }
 
@@ -718,7 +731,9 @@ export default class MainScene extends Phaser.Scene {
           };
 
           // emit it
-          this.socket.emit("enemy_update", enemyEmitData);
+          if (this.socket) {
+            this.socket.emit("enemy_update", enemyEmitData);
+          }
           this.enemiesLastEmitData[enemy.id] = enemyEmitData;
         }
       });

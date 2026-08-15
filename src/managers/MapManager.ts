@@ -37,7 +37,12 @@ export class MapManager {
       };
     } = {};
 
+    // Extract tileset names embedded in the map JSON
+    const mapTilesetNames = this.map.tilesets.map((t) => t.name);
+
     for (const asset of TILESETS) {
+      if (!mapTilesetNames.includes(asset.tiledName)) continue;
+
       const tileset = this.map.addTilesetImage(asset.tiledName, asset.key);
       if (tileset) {
         registeredTilesets.push(tileset);
