@@ -68,6 +68,13 @@ export default class MainScene extends Phaser.Scene {
     
     (this as any).transitioning = false;
 
+    // Reset entity collections to prevent stale references on restart
+    this.enemies = [];
+    this.npcs = [];
+    this.coins = [];
+    this.enemiesLastEmitData = {};
+    this.lastEmitData = {};
+
     // Clean up events from previous runs to prevent duplicate listeners
     events.off("player-attack");
     events.off("show-dialog");
@@ -387,8 +394,39 @@ export default class MainScene extends Phaser.Scene {
 
     calculateLGOffset();
 
-    this.scale.on("resize", () => {
-      calculateLGOffset();
+    this.scale.on("resize", calculateLGOffset);
+
+    // Clean up event listeners and sockets on scene shutdown
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      events.off("player-attack");
+      events.off("show-dialog");
+      events.off("dialog-closed");
+      events.off("enemy-died");
+      events.off("player-died");
+
+      this.scale.off("resize", calculateLGOffset);
+
+      if (this.castleSparkle) {
+        this.castleSparkle.destroy();
+        this.castleSparkle = undefined;
+      }
+      if (this.towerSparkle) {
+        this.towerSparkle.destroy();
+        this.towerSparkle = undefined;
+      }
+      if (this.matter && this.matter.world) {
+        this.matter.world.off("collisionstart");
+      }
+
+      if (this.socket) {
+        this.socket.off("player_update");
+        this.socket.off("enemy_update");
+        this.socket.off("coin_spawn");
+        this.socket.off("coin_pickup");
+        this.socket.off("map_transition");
+        this.socket.disconnect();
+        this.socket = null;
+      }
     });
 
     if (!this.isMaster) {
@@ -466,9 +504,11 @@ export default class MainScene extends Phaser.Scene {
     } else {
       // Pause menu listener — blocked while the scene is loading (isLoading flag)
       this.input.keyboard!.on("keydown-ESC", () => {
-        if ((this as any).isLoading) return;
-        this.scene.pause();
-        this.scene.launch("PauseMenuScene");
+        if ((this as any).isLoading || (this as any).transitioning) return;
+        if (this.scene.isActive("Game")) {
+          this.scene.pause();
+          this.scene.launch("PauseMenuScene");
+        }
       });
     }
 
@@ -516,6 +556,8 @@ export default class MainScene extends Phaser.Scene {
       }
 
       this.npcs.forEach((npc) => {
+        if (!npc || !npc.active || !this.player || !this.player.active) return;
+
         const dist = Phaser.Math.Distance.Between(
           this.player.x,
           this.player.y,
@@ -649,13 +691,15 @@ export default class MainScene extends Phaser.Scene {
           flipX: this.player.flipX,
         };
 
-        this.socket.emit("player_update", emitData);
+        if (this.socket) {
+          this.socket.emit("player_update", emitData);
+        }
         this.lastEmitData = emitData;
       }
 
       // remove dead enemies
       this.enemies = this.enemies.filter(
-        (enemy) => !enemy.isDead || enemy.active,
+        (enemy) => enemy.active && !enemy.isDead,
       );
 
       this.npcs.forEach((npc) => {
@@ -687,7 +731,9 @@ export default class MainScene extends Phaser.Scene {
           };
 
           // emit it
-          this.socket.emit("enemy_update", enemyEmitData);
+          if (this.socket) {
+            this.socket.emit("enemy_update", enemyEmitData);
+          }
           this.enemiesLastEmitData[enemy.id] = enemyEmitData;
         }
       });

@@ -44,13 +44,15 @@ export class Npc extends Phaser.Physics.Matter.Sprite {
   }
 
   update() {
-    if ((this as any).isLGSlave) {
+    if ((this as any).isLGSlave || !this.active) {
       return;
     }
 
     // The visibility of the indicator is set by the game scene based on proximity
-    this.indicator.setPosition(this.x, this.y - 40);
-    this.indicator.setVisible(this.showIndicator);
+    if (this.indicator && this.indicator.active) {
+      this.indicator.setPosition(this.x, this.y - 40);
+      this.indicator.setVisible(this.showIndicator);
+    }
   }
 
   setIndicatorVisible(visible: boolean) {

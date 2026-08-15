@@ -37,7 +37,12 @@ export class MapManager {
       };
     } = {};
 
+    // Extract tileset names embedded in the map JSON
+    const mapTilesetNames = this.map.tilesets.map((t) => t.name);
+
     for (const asset of TILESETS) {
+      if (!mapTilesetNames.includes(asset.tiledName)) continue;
+
       const tileset = this.map.addTilesetImage(asset.tiledName, asset.key);
       if (tileset) {
         registeredTilesets.push(tileset);
@@ -375,11 +380,15 @@ export class MapManager {
         const spawnName = obj.properties?.find(
           (p: any) => p.name === "spawnName",
         )?.value;
-        if (targetMap) {
-          // Help user if they typed .json in Tiled
-          if (targetMap.endsWith(".json")) {
-            targetMap = targetMap.replace(".json", "_map");
-          }
+          if (targetMap) {
+            // Clean filename if user typed file extension in Tiled
+            if (targetMap.endsWith(".json")) {
+              targetMap = targetMap.replace(".json", "");
+            }
+            // Map legacy or shorthand names to asset keys
+            if (targetMap === "spawn") {
+              targetMap = "map";
+            }
 
           transitions.push({
             x: obj.x ?? 0,
