@@ -567,6 +567,7 @@ export class MapManager {
     height: number;
     maxMobs: number;
     spawnInterval: number;
+    enemyType?: string;
   }[] {
     const areas: {
       x: number;
@@ -575,6 +576,7 @@ export class MapManager {
       height: number;
       maxMobs: number;
       spawnInterval: number;
+      enemyType?: string;
     }[] = [];
 
     if (this.map.objects) {
@@ -591,6 +593,7 @@ export class MapManager {
 
             let maxMobs = 5;
             let spawnInterval = 5000; // ms
+            let enemyType: string | undefined = undefined;
 
             if (obj.properties) {
               const maxVal = this.getProperty(obj.properties, "maxMobs");
@@ -598,9 +601,12 @@ export class MapManager {
 
               const intervalVal = this.getProperty(obj.properties, "spawnInterval");
               if (typeof intervalVal === "number") spawnInterval = intervalVal;
+
+              const typeVal = this.getProperty(obj.properties, "enemyType");
+              if (typeof typeVal === "string") enemyType = typeVal;
             }
 
-            areas.push({ x, y, width, height, maxMobs, spawnInterval });
+            areas.push({ x, y, width, height, maxMobs, spawnInterval, enemyType });
           }
         }
       }

@@ -57,6 +57,7 @@ export default class MainScene extends Phaser.Scene {
     maxMobs: number;
     spawnInterval: number;
     lastSpawn: number;
+    enemyType?: string;
   }[] = [];
 
   private projectiles: {
@@ -879,17 +880,20 @@ export default class MainScene extends Phaser.Scene {
               const spawnX = area.x + Math.random() * area.width;
               const spawnY = area.y + Math.random() * area.height;
 
-              const enemyTypes = [
-                "enemy_goblin_torch_blue",
-                "enemy_goblin_tnt_blue",
-                "enemy_goblin_barrel_blue"
-              ];
-              const randomType = Phaser.Math.RND.pick(enemyTypes);
+              let spawnType = area.enemyType;
+              if (!spawnType) {
+                const enemyTypes = [
+                  "enemy_goblin_torch_blue",
+                  "enemy_goblin_tnt_blue",
+                  "enemy_goblin_barrel_blue"
+                ];
+                spawnType = Phaser.Math.RND.pick(enemyTypes);
+              }
               const enemy = new Enemy(
                 this,
                 spawnX,
                 spawnY,
-                randomType
+                spawnType
               );
               enemy.setDepth(499);
               enemy.setTarget(this.player);
