@@ -439,38 +439,62 @@ export class MapManager {
     candidateObjects.forEach((obj: any) => {
       const name = obj.name?.toLowerCase() || "";
       const type = obj.type?.toLowerCase() || "";
+      const customType = this.getProperty(obj.properties, "enemyType");
+
+      const isPlayerSpawn = 
+        name === "playerspawn" || 
+        type === "playerspawn" || 
+        name === "player_spawn" || 
+        name === "spawn" || 
+        type === "spawn" || 
+        name === "defaultspawn" || 
+        name === "default_spawn" ||
+        name === "startpoint" ||
+        name === "start_point";
+
+      const isNpcSpawn = 
+        name === "npcspawn" || 
+        type === "npcspawn" || 
+        name === "npc_spawn" ||
+        name.includes("npc");
+
+      if (isPlayerSpawn || isNpcSpawn) {
+        return; // Skip player and NPC points
+      }
+
+      const isTnt = name.includes("tnt") || type.includes("tnt") || name.includes("dynamite") || type.includes("dynamite");
+      const isBarrel = name.includes("barrel") || type.includes("barrel");
+      const isTorch = name.includes("torch") || type.includes("torch");
+      const isGoblin = name.includes("goblin") || type.includes("goblin");
+      const isEnemy = name.includes("enemy") || type.includes("enemy");
+      
+      const isSpawn = 
+        name.includes("spawn") || 
+        type.includes("spawn") || 
+        name === "tntblue" || 
+        type === "tntblue" ||
+        name === "tnt_blue" ||
+        type === "tnt_blue";
 
       if (
-        name === "enemyspawn" ||
-        type === "enemyspawn" ||
-        name === "goblin_spawn" ||
-        type === "goblin_spawn" ||
-        name === "torch_spawn" ||
-        type === "torch_spawn" ||
-        name === "tnt_spawn" ||
-        type === "tnt_spawn" ||
-        name === "barrel_spawn" ||
-        type === "barrel_spawn"
+        isSpawn ||
+        isTnt ||
+        isBarrel ||
+        isTorch ||
+        isGoblin ||
+        isEnemy ||
+        customType !== undefined
       ) {
         let enemyType = "enemy_goblin_torch_blue"; // default fallback
 
-        if (name === "tnt_spawn" || type === "tnt_spawn") {
+        if (typeof customType === "string" && customType.trim() !== "") {
+          enemyType = customType.trim();
+        } else if (isTnt) {
           enemyType = "enemy_goblin_tnt_blue";
-        } else if (name === "barrel_spawn" || type === "barrel_spawn") {
+        } else if (isBarrel) {
           enemyType = "enemy_goblin_barrel_blue";
-        } else if (
-          name === "torch_spawn" ||
-          type === "torch_spawn" ||
-          name === "goblin_spawn" ||
-          type === "goblin_spawn"
-        ) {
+        } else if (isTorch || isGoblin || isEnemy) {
           enemyType = "enemy_goblin_torch_blue";
-        } else {
-          // Fallback to custom property if set in Tiled
-          const customType = this.getProperty(obj.properties, "enemyType");
-          if (typeof customType === "string") {
-            enemyType = customType;
-          }
         }
 
         enemySpawns.push({

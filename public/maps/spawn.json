@@ -264,6 +264,60 @@
                  "width":4,
                  "x":1552,
                  "y":1470
+                }, 
+                {
+                 "height":34,
+                 "id":211,
+                 "name":"",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"enemyType",
+                         "type":"string",
+                         "value":"enemy_goblin_tnt_blue"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":62,
+                 "x":1950,
+                 "y":2470.5
+                }, 
+                {
+                 "height":34,
+                 "id":212,
+                 "name":"",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"enemyType",
+                         "type":"string",
+                         "value":"enemy_goblin_tnt_blue"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":62,
+                 "x":1947,
+                 "y":673
+                }, 
+                {
+                 "height":34,
+                 "id":213,
+                 "name":"",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"enemyType",
+                         "type":"string",
+                         "value":"enemy_goblin_tnt_blue"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":62,
+                 "x":2657,
+                 "y":2019
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -2391,8 +2445,8 @@
                  "type":"",
                  "visible":true,
                  "width":106.5,
-                 "x":1932.75,
-                 "y":650
+                 "x":1928.75,
+                 "y":661
                 }, 
                 {
                  "height":148,
@@ -3344,7 +3398,7 @@
          "y":0
         }],
  "nextlayerid":32,
- "nextobjectid":211,
+ "nextobjectid":214,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.2",
