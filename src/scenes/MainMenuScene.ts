@@ -13,8 +13,10 @@ export default class MainMenuScene extends Phaser.Scene {
     const screenParam = urlParams.get("screen");
     const isMaster = !screenParam || parseInt(screenParam, 10) === 1;
 
-    const socketHost = window.location.hostname;
-    this.socket = io(`http://${socketHost}:8128`);
+    const socketUrl = window.location.port === "5173"
+      ? `http://${window.location.hostname}:8128`
+      : window.location.origin;
+    this.socket = io(socketUrl);
 
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
@@ -149,28 +151,30 @@ export default class MainMenuScene extends Phaser.Scene {
       this.socket.on("start_game", () => {
         this.startGame();
       });
-
-      this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-        if (this.socket) {
-          this.socket.off("start_game");
-        }
-      });
     }
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      if (this.socket) {
+        this.socket.off("start_game");
+        this.socket.disconnect();
+        this.socket = null;
+      }
+    });
   }
 
   private startGame() {
-    if (this.socket) {
-      const urlParams = new URLSearchParams(window.location.search);
-      const screenParam = urlParams.get("screen");
-      const isMaster = !screenParam || parseInt(screenParam, 10) === 1;
+    const urlParams = new URLSearchParams(window.location.search);
+    const screenParam = urlParams.get("screen");
+    const isMaster = !screenParam || parseInt(screenParam, 10) === 1;
 
-      if (isMaster) {
-        this.socket.emit("start_game");
-      }
-
-      this.socket.disconnect();
+    if (isMaster && this.socket) {
+      this.socket.emit("start_game");
+      // Let the socket buffer flush before starting game and disconnecting
+      this.time.delayedCall(150, () => {
+        this.scene.start("Game");
+      });
+    } else {
+      this.scene.start("Game");
     }
-
-    this.scene.start("Game");
   }
 }
