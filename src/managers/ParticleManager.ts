@@ -50,30 +50,36 @@ export class ParticleManager {
   }
 
   private createTextures() {
-    // Create a simple white/gray circle for dust
     const graphics = this.scene.add.graphics();
 
-    graphics.fillStyle(0xeeeeee, 1);
-    graphics.fillCircle(4, 4, 4);
-    graphics.generateTexture("fx_dust", 8, 8);
-    graphics.clear();
+    if (!this.scene.textures.exists("fx_dust")) {
+      graphics.fillStyle(0xeeeeee, 1);
+      graphics.fillCircle(4, 4, 4);
+      graphics.generateTexture("fx_dust", 8, 8);
+      graphics.clear();
+    }
 
-    // Create a simple brown square for debris/wood chips
-    graphics.fillStyle(0x8b4513, 1);
-    graphics.fillRect(0, 0, 6, 6);
-    graphics.generateTexture("fx_debris", 6, 6);
-    graphics.clear();
+    if (!this.scene.textures.exists("fx_debris")) {
+      graphics.fillStyle(0x8b4513, 1);
+      graphics.fillRect(0, 0, 6, 6);
+      graphics.generateTexture("fx_debris", 6, 6);
+      graphics.clear();
+    }
 
-    // Create a red circle for blood
-    graphics.fillStyle(0xcc0000, 1);
-    graphics.fillCircle(3, 3, 3);
-    graphics.generateTexture("fx_blood", 6, 6);
-    graphics.clear();
+    if (!this.scene.textures.exists("fx_blood")) {
+      graphics.fillStyle(0xcc0000, 1);
+      graphics.fillCircle(3, 3, 3);
+      graphics.generateTexture("fx_blood", 6, 6);
+      graphics.clear();
+    }
 
-    // Create a yellow sparkle for interaction
-    graphics.fillStyle(0xffffaa, 1);
-    graphics.fillCircle(3, 3, 3);
-    graphics.generateTexture("fx_sparkle", 6, 6);
+    if (!this.scene.textures.exists("fx_sparkle")) {
+      graphics.fillStyle(0xffffaa, 1);
+      graphics.fillCircle(3, 3, 3);
+      graphics.generateTexture("fx_sparkle", 6, 6);
+      graphics.clear();
+    }
+
     graphics.destroy();
   }
 
@@ -166,5 +172,17 @@ export class ParticleManager {
     });
     emitter.setDepth(y + 10);
     return emitter;
+  }
+
+  public destroy() {
+    if (this.dustEmitter) {
+      this.dustEmitter.destroy();
+    }
+    if (this.debrisEmitter) {
+      this.debrisEmitter.destroy();
+    }
+    if (this.bloodEmitter) {
+      this.bloodEmitter.destroy();
+    }
   }
 }

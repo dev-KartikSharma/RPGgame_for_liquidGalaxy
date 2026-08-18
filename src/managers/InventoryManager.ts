@@ -9,20 +9,8 @@ export class InventoryManager {
   public items: Item[] = [];
   private maxSlots: number = 16;
 
-  constructor() {
-    // Add some dummy items for testing
-    this.addItem({
-      id: "potion",
-      name: "Health Potion",
-      iconKey: "icon_01",
-      quantity: 3,
-    });
-    this.addItem({
-      id: "sword",
-      name: "Iron Sword",
-      iconKey: "icon_02",
-      quantity: 1,
-    });
+  constructor(initialItems: Item[] = []) {
+    this.items = [...initialItems];
   }
 
   public addItem(item: Item): boolean {

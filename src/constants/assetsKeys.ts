@@ -48,6 +48,34 @@ export const SPRITESHEETS = [
     frameWidth: 192,
     frameHeight: 192,
   },
+  // Goblin TNT Blue variation
+  {
+    key: "enemy_goblin_tnt_blue",
+    path: "terrain/enemy/goblin/troops/tnt/blue/tnt_blue.png",
+    frameWidth: 192,
+    frameHeight: 192,
+  },
+  // Goblin Barrel Blue variation
+  {
+    key: "enemy_goblin_barrel_blue",
+    path: "terrain/enemy/goblin/troops/barrel/blue/barrel_blue.png",
+    frameWidth: 128,
+    frameHeight: 128,
+  },
+  // Explosion effect
+  {
+    key: "explosion",
+    path: "effects/Explosions.png",
+    frameWidth: 192,
+    frameHeight: 192,
+  },
+  // Dynamite projectile spritesheet
+  {
+    key: "dynamite_projectile",
+    path: "terrain/enemy/goblin/troops/tnt/dynamite/dynamite.png",
+    frameWidth: 64,
+    frameHeight: 64,
+  },
 ];
 
 export const TILESETS = [
@@ -84,7 +112,7 @@ export const TILESETS = [
   {
     tiledName: "masterTilesetBuildings",
     key: "master_tileset_buildings",
-    path: "buildings/master_tileset_buildings.png", // assuming this path works based on common structure, wait, I should check it, but this is the best guess
+    path: "buildings/master_tileset_buildings.png",
   },
   {
     tiledName: "bushe1",
@@ -97,11 +125,6 @@ export const TILESETS = [
     path: "terrain/master/shadow.png",
   },
   {
-    tiledName: "master_clouds",
-    key: "master_clouds",
-    path: "terrain/deco/clouds/master_clouds.png",
-  },
-  {
     tiledName: "master_tileset_buildings",
     key: "master_tileset_buildings_safevillage",
     path: "buildings/master_tileset_buildings.png",
@@ -110,6 +133,21 @@ export const TILESETS = [
     tiledName: "rubber_duck",
     key: "rubber_duck",
     path: "terrain/deco/rubber_duck/rubber_duck.png",
+  },
+  {
+    tiledName: "Gold Stone 1_Highlight",
+    key: "gold_stone_1_highlight",
+    path: "resources/goldstones/Gold Stone 1_Highlight.png",
+  },
+  {
+    tiledName: "ribbon_red",
+    key: "ribbon_red",
+    path: "ui_elements/ui_banners_from_the_store_page/ribbons/ribbon_red.png",
+  },
+  {
+    tiledName: "banner",
+    key: "banner",
+    path: "ui_elements/ui_elements/banners/banner.png",
   },
 ];
 

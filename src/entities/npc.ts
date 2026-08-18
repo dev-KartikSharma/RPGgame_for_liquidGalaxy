@@ -17,7 +17,7 @@ export class Npc extends Phaser.Physics.Matter.Sprite {
     super(scene.matter.world, x, y, texture);
 
     this.dialogText = dialogText;
-    this.id = "npc_" + Math.random().toString(36).substr(2, 9); // Simple unique ID
+    this.id = "npc_" + Phaser.Math.RND.uuid(); // Simple unique ID
 
     scene.add.existing(this);
 

@@ -1,6 +1,5 @@
 import Phaser from "phaser";
 
-
 export default class DeathMenuScene extends Phaser.Scene {
   constructor() {
     super({ key: "DeathMenuScene" });
@@ -140,19 +139,29 @@ export default class DeathMenuScene extends Phaser.Scene {
     resizeUI();
     this.scale.on("resize", resizeUI);
 
-    this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => {
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.scale.off("resize", resizeUI);
+      this.tweens.killAll();
     });
   }
 
   private restartGame() {
+    const gameScene = this.scene.get("Game") as any;
+    if (gameScene && gameScene.socket) {
+      gameScene.socket.emit("game_restart");
+    }
     this.scene.stop("UIScene");
     this.scene.start("Game");
   }
 
   private quitToMain() {
+    const gameScene = this.scene.get("Game") as any;
+    if (gameScene && gameScene.socket) {
+      gameScene.socket.emit("quit_to_main");
+    }
     this.scene.stop("UIScene");
     this.scene.stop("Game");
     this.scene.start("MainMenuScene");
   }
 }
+

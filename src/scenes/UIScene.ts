@@ -1,12 +1,12 @@
 import Phaser from "phaser";
 import { events } from "../managers/EventManager";
-import { DialogBox } from "../ui/DialogBox";
-import { InventoryManager } from "../managers/InventoryManager";
+import { DialogBox, type DialogPage } from "../ui/DialogBox";
+import { InventoryManager, type Item } from "../managers/InventoryManager";
 import { InventoryUI } from "../ui/InventoryUI";
 
 export default class UIScene extends Phaser.Scene {
-  private healthFill!: Phaser.GameObjects.Image;
-  private manaFill!: Phaser.GameObjects.Image;
+  private healthFill!: Phaser.GameObjects.Graphics;
+  private manaFill!: Phaser.GameObjects.Graphics;
 
   private dialogBox!: DialogBox;
   private inventoryManager!: InventoryManager;
@@ -17,6 +17,49 @@ export default class UIScene extends Phaser.Scene {
 
   private containerLeft!: Phaser.GameObjects.Container;
   private containerRight!: Phaser.GameObjects.Container;
+
+  // Bound handler references for clean unregistration
+  private onKeyDownI = () => {
+    if (this.inventoryUI) {
+      this.inventoryUI.toggle();
+    }
+  };
+
+  private handleShowDialog = (text: string | string[] | DialogPage[]) => {
+    if (this.dialogBox) {
+      this.dialogBox.show(text);
+    }
+  };
+
+  private handleAddInventoryItem = (item: Item) => {
+    if (this.inventoryManager) {
+      this.inventoryManager.addItem(item);
+    }
+  };
+
+  private updateHealth = (health: number, maxHealth: number) => {
+    const percent = Phaser.Math.Clamp(health / maxHealth, 0, 1);
+    if (this.healthFill) {
+      this.healthFill.clear();
+      if (percent > 0) {
+        this.healthFill.fillStyle(0xe53b3b, 1); // Premium warm red
+        // X = 8, Y = 25, Width = 176 * percent, Height = 19
+        this.healthFill.fillRect(8, 25, this.healthFillMaxWidth * percent, 19);
+      }
+    }
+  };
+
+  private updateMana = (mana: number, maxMana: number) => {
+    const percent = Phaser.Math.Clamp(mana / maxMana, 0, 1);
+    if (this.manaFill) {
+      this.manaFill.clear();
+      if (percent > 0) {
+        this.manaFill.fillStyle(0x3182ce, 1); // Stamina blue
+        // X = 8, Y = 78, Width = 80 * percent, Height = 6
+        this.manaFill.fillRect(8, 78, this.manaFillMaxWidth * percent, 6);
+      }
+    }
+  };
 
   constructor() {
     super({ key: "UIScene", active: false });
@@ -74,7 +117,6 @@ export default class UIScene extends Phaser.Scene {
     let hudLayerRight = null;
     if (map.getLayer("HUD_Right"))
       hudLayerRight = map.createLayer("HUD_Right", tilesets, 0, 0);
-    // We do NOT fallback to HUD here because HUD was already created in HUD_Left!
     if (hudLayerRight) this.containerRight.add(hudLayerRight);
 
     // Extract Interactive Objects
@@ -82,33 +124,22 @@ export default class UIScene extends Phaser.Scene {
     if (objectLayer && objectLayer.objects) {
       objectLayer.objects.forEach((obj) => {
         if (obj.name === "HealthBarFill") {
-          // Use the big_bar_fill image and tint it red
-          this.healthFill = this.add
-            .image(obj.x!, obj.y!, "big_bar_fill")
-            .setOrigin(0, 0)
-            .setTint(0xff0000);
-          // Force the height to match the object's height if necessary, and use displayWidth for scaling
-          this.healthFill.displayHeight = obj.height!;
-          this.healthFillMaxWidth = obj.width!;
-          this.healthFill.displayWidth = this.healthFillMaxWidth;
+          this.healthFillMaxWidth = 176; // Exact slot width
+          this.healthFill = this.add.graphics();
           this.containerLeft.add(this.healthFill);
+          // Initial full health draw
+          this.updateHealth(100, 100);
         } else if (obj.name === "ManaBarFill") {
-          // Use the small_bar_fill image and tint it blue (mana)
-          this.manaFill = this.add
-            .image(obj.x!, obj.y!, "small_bar_fill")
-            .setOrigin(0, 0)
-            .setTint(0x0088ff);
-          this.manaFill.displayHeight = obj.height!;
-          this.manaFillMaxWidth = obj.width!;
-          this.manaFill.displayWidth = this.manaFillMaxWidth;
+          this.manaFillMaxWidth = 80; // Exact slot width
+          this.manaFill = this.add.graphics();
           this.containerLeft.add(this.manaFill);
+          // Initial full stamina/mana draw
+          this.updateMana(100, 100);
         } else if (obj.name === "Settings") {
           // Manually render the Settings gear icon so it anchors correctly to the right side of the screen
           const settingsImg = this.add
             .image(obj.x!, obj.y!, "icon_10")
             .setOrigin(0, 0);
-          // We DO NOT stretch it to obj.width or obj.height!
-          // Tiled squashes interactive zones easily, so we just use the native 64x64 icon size.
 
           const zone = this.add
             .zone(obj.x!, obj.y!, obj.width!, obj.height!)
@@ -132,21 +163,16 @@ export default class UIScene extends Phaser.Scene {
     this.inventoryManager = new InventoryManager();
     this.inventoryUI = new InventoryUI(this, this.inventoryManager);
 
-    this.input.keyboard!.on("keydown-I", () => {
-      this.inventoryUI.toggle();
-    });
+    // Register Keyboard Listener
+    if (this.input && this.input.keyboard) {
+      this.input.keyboard.on("keydown-I", this.onKeyDownI);
+    }
 
     // --- EVENTS ---
-    events.on("player-health-changed", this.updateHealth, this);
-    events.on("player-mana-changed", this.updateMana, this);
-    events.on("show-dialog", (text: string) => this.dialogBox.show(text), this);
-    events.on(
-      "add-inventory-item",
-      (item: any) => {
-        this.inventoryManager.addItem(item);
-      },
-      this,
-    );
+    events.on("player-health-changed", this.updateHealth);
+    events.on("player-mana-changed", this.updateMana);
+    events.on("show-dialog", this.handleShowDialog);
+    events.on("add-inventory-item", this.handleAddInventoryItem);
 
     // --- DYNAMIC POSITIONING ---
     const resizeUI = () => {
@@ -154,39 +180,39 @@ export default class UIScene extends Phaser.Scene {
       const physicalHeight = this.scale.height;
 
       // Dialog & Inventory handle their own resizing (they assume camera zoom is 1)
-      this.dialogBox.resize(physicalWidth, physicalHeight);
-      this.inventoryUI.resize(physicalWidth, physicalHeight);
+      if (this.dialogBox) this.dialogBox.resize(physicalWidth, physicalHeight);
+      if (this.inventoryUI)
+        this.inventoryUI.resize(physicalWidth, physicalHeight);
 
       // Left HUD stays locked to top-left
-      this.containerLeft.setPosition(0, 0);
+      if (this.containerLeft) this.containerLeft.setPosition(0, 0);
 
       // Right HUD snaps the logical 1280 right-edge to the physical right-edge
-      this.containerRight.setPosition(physicalWidth - 1280 * uiZoom, 0);
+      if (this.containerRight)
+        this.containerRight.setPosition(physicalWidth - 1280 * uiZoom, 0);
     };
     resizeUI();
     this.scale.on("resize", resizeUI);
 
-    // Clean up
-    this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => {
-      events.off("player-health-changed", this.updateHealth, this);
-      events.off("player-mana-changed", this.updateMana, this);
-      events.off("show-dialog");
-      events.off("add-inventory-item");
+    // Clean up all resources on scene shutdown
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      if (this.input && this.input.keyboard) {
+        this.input.keyboard.off("keydown-I", this.onKeyDownI);
+      }
+
+      events.off("player-health-changed", this.updateHealth);
+      events.off("player-mana-changed", this.updateMana);
+      events.off("show-dialog", this.handleShowDialog);
+      events.off("add-inventory-item", this.handleAddInventoryItem);
       this.scale.off("resize", resizeUI);
+
+      if (this.dialogBox) {
+        this.dialogBox.destroy();
+      }
+      if (this.inventoryUI) {
+        this.inventoryUI.destroy();
+      }
     });
   }
-
-  private updateHealth(health: number, maxHealth: number) {
-    const percent = Phaser.Math.Clamp(health / maxHealth, 0, 1);
-    if (this.healthFill) {
-      this.healthFill.displayWidth = percent * this.healthFillMaxWidth;
-    }
-  }
-
-  private updateMana(mana: number, maxMana: number) {
-    const percent = Phaser.Math.Clamp(mana / maxMana, 0, 1);
-    if (this.manaFill) {
-      this.manaFill.displayWidth = percent * this.manaFillMaxWidth;
-    }
-  }
 }
+

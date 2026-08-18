@@ -21,6 +21,10 @@ export class DialogBox {
   private pageIndex: number = 0;
   private typeTimer?: Phaser.Time.TimerEvent;
 
+  // Bound event handlers for clean unregistration
+  private onKeyDownE = () => this.handleInput();
+  private boundPointerDown = () => this.handleInput();
+
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
 
@@ -80,9 +84,11 @@ export class DialogBox {
 
     this.resize(scene.scale.width / 2, scene.scale.height / 2); // Initial layout
 
-    // Click to advance/skip
-    this.background.on("pointerdown", () => this.handleInput());
-    scene.input.keyboard!.on("keydown-E", () => this.handleInput());
+    // Attach listeners
+    this.background.on("pointerdown", this.boundPointerDown);
+    if (this.scene.input && this.scene.input.keyboard) {
+      this.scene.input.keyboard.on("keydown-E", this.onKeyDownE);
+    }
   }
 
   public resize(logicalWidth: number, logicalHeight: number) {
@@ -107,22 +113,64 @@ export class DialogBox {
   }
 
   public show(text: string | string[] | DialogPage[]) {
-    if (Array.isArray(text)) {
-      if (text.length > 0 && typeof text[0] === "string") {
-        this.pages = (text as string[]).map((t) => ({ text: t }));
-      } else {
-        this.pages = text as DialogPage[];
-      }
-    } else {
-      this.pages = [{ text: text as string }];
+    // Guard against null, undefined, or empty inputs (BUG-UI-02)
+    if (!text) {
+      this.hide();
+      return;
     }
+
+    if (Array.isArray(text)) {
+      if (text.length === 0) {
+        this.hide();
+        return;
+      }
+      if (typeof text[0] === "string") {
+        this.pages = (text as string[])
+          .filter((t) => typeof t === "string" && t.trim().length > 0)
+          .map((t) => ({ text: t }));
+      } else {
+        this.pages = (text as DialogPage[]).filter(
+          (p) => p && typeof p.text === "string" && p.text.trim().length > 0,
+        );
+      }
+    } else if (typeof text === "string") {
+      if (text.trim().length === 0) {
+        this.hide();
+        return;
+      }
+      this.pages = [{ text }];
+    } else {
+      this.pages = [];
+    }
+
+    if (this.pages.length === 0) {
+      this.hide();
+      return;
+    }
+
     this.pageIndex = 0;
     this.startPage();
     this.container.setVisible(true);
   }
 
   private startPage() {
+    if (!this.pages || this.pageIndex >= this.pages.length) {
+      this.hide();
+      return;
+    }
+
     const page = this.pages[this.pageIndex];
+    if (!page || typeof page.text !== "string") {
+      this.hide();
+      return;
+    }
+
+    // Clear any active typing timer before starting a new page
+    if (this.typeTimer) {
+      this.typeTimer.remove();
+      this.typeTimer = undefined;
+    }
+
     this.currentText = page.text;
 
     if (page.speaker) {
@@ -150,6 +198,7 @@ export class DialogBox {
     this.isTyping = false;
     if (this.typeTimer) {
       this.typeTimer.remove();
+      this.typeTimer = undefined;
     }
     events.emit("dialog-closed");
   }
@@ -165,16 +214,20 @@ export class DialogBox {
       this.promptTextObj.setVisible(true);
       if (this.typeTimer) {
         this.typeTimer.remove();
+        this.typeTimer = undefined;
       }
     }
   }
 
   private handleInput() {
-    if (!this.container.visible) return;
+    if (!this.container || !this.container.visible) return;
 
     if (this.isTyping) {
       // Skip typing and show full text
-      if (this.typeTimer) this.typeTimer.remove();
+      if (this.typeTimer) {
+        this.typeTimer.remove();
+        this.typeTimer = undefined;
+      }
       this.textObj.setText(this.currentText);
       this.isTyping = false;
       this.promptTextObj.setVisible(true);
@@ -187,6 +240,25 @@ export class DialogBox {
         // Dismiss dialog
         this.hide();
       }
+    }
+  }
+
+  public destroy() {
+    if (this.scene && this.scene.input && this.scene.input.keyboard) {
+      this.scene.input.keyboard.off("keydown-E", this.onKeyDownE);
+    }
+    if (this.typeTimer) {
+      this.typeTimer.remove();
+      this.typeTimer = undefined;
+    }
+    if (this.promptTextObj && this.scene && this.scene.tweens) {
+      this.scene.tweens.killTweensOf(this.promptTextObj);
+    }
+    if (this.background) {
+      this.background.off("pointerdown", this.boundPointerDown);
+    }
+    if (this.container) {
+      this.container.destroy(true);
     }
   }
 }

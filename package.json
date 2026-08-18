@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "concurrently \"node server.js\" \"vite --host\"",
     "build": "tsc && vite build",
+    "start": "node server.js",
     "preview": "vite preview"
   },
   "devDependencies": {
@@ -15,6 +16,7 @@
   "dependencies": {
     "canvas": "^3.2.3",
     "concurrently": "^10.0.3",
+    "express": "^5.2.1",
     "phaser": "^4.1.0",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3"

@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { InventoryManager } from "../managers/InventoryManager";
+import type { InventoryManager } from "../managers/InventoryManager";
 
 export class InventoryUI {
   private scene: Phaser.Scene;
@@ -67,12 +67,13 @@ export class InventoryUI {
   }
 
   private drawItems() {
-    // Remove old item icons from container
-    this.container.each((child: any) => {
-      if (child.isItemIcon) {
-        child.destroy();
-      }
-    });
+    // Remove old item icons from container safely using a snapshot array (BUG-UI-01)
+    const itemsToDestroy = this.container.list.filter(
+      (child: any) => child && (child as any).isItemIcon,
+    );
+    for (const child of itemsToDestroy) {
+      child.destroy();
+    }
 
     const startX = 0;
     const startY = -80;
@@ -86,7 +87,7 @@ export class InventoryUI {
 
       const icon = this.scene.add.image(iconX, y, item.iconKey);
       // Scale icon so it fits nicely in the 50px high row
-      icon.setScale(40 / Math.max(icon.width, icon.height));
+      icon.setScale(40 / Math.max(icon.width || 1, icon.height || 1));
       (icon as any).isItemIcon = true;
       this.container.add(icon);
 
@@ -114,4 +115,11 @@ export class InventoryUI {
       this.container.add(qtyText);
     });
   }
+
+  public destroy() {
+    if (this.container) {
+      this.container.destroy(true);
+    }
+  }
 }
+

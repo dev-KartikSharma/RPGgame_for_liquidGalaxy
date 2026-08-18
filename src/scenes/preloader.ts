@@ -49,6 +49,18 @@ export default class PreloaderScene extends Phaser.Scene {
   }
 
   create() {
+    if (!this.anims.exists("play_water_splash")) {
+      this.anims.create({
+        key: "play_water_splash",
+        frames: this.anims.generateFrameNumbers("water_splash", {
+          start: 0,
+          end: 8,
+        }),
+        frameRate: 8,
+        repeat: 0,
+      });
+    }
+
     this.scene.start("MainMenuScene");
   }
 }

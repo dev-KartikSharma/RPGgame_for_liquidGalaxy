@@ -1,6 +1,10 @@
 import Phaser from "phaser";
 
 export default class PauseMenuScene extends Phaser.Scene {
+  private onKeyDownEsc = () => {
+    this.resumeGame();
+  };
+
   constructor() {
     super({ key: "PauseMenuScene" });
   }
@@ -141,13 +145,17 @@ export default class PauseMenuScene extends Phaser.Scene {
     this.scale.on("resize", resizeUI);
 
     // ESC key to also resume
-    this.input.keyboard!.on("keydown-ESC", () => {
-      this.resumeGame();
-    });
+    if (this.input && this.input.keyboard) {
+      this.input.keyboard.on("keydown-ESC", this.onKeyDownEsc);
+    }
 
-    // Clean up events
-    this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => {
+    // Clean up events on shutdown
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      if (this.input && this.input.keyboard) {
+        this.input.keyboard.off("keydown-ESC", this.onKeyDownEsc);
+      }
       this.scale.off("resize", resizeUI);
+      this.tweens.killAll();
     });
   }
 
@@ -157,8 +165,13 @@ export default class PauseMenuScene extends Phaser.Scene {
   }
 
   private quitToMain() {
+    const gameScene = this.scene.get("Game") as any;
+    if (gameScene && gameScene.socket) {
+      gameScene.socket.emit("quit_to_main");
+    }
     this.scene.stop("UIScene");
     this.scene.stop("Game");
     this.scene.start("MainMenuScene");
   }
 }
+
