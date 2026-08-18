@@ -1,13 +1,13 @@
 export const ASEPRITES = [
   {
     key: "player",
-    textureURL: "units/warrior/warrior.png",
-    atlasURL: "units/warrior/warrior.json",
+    textureURL: "units/warrior/Warrior.png",
+    atlasURL: "units/warrior/Warrior.json",
   },
   {
     key: "enemy_goblin_torch_blue",
-    textureURL: "terrain/enemy/goblin/troops/torch/blue/torch_blue.png",
-    atlasURL: "terrain/enemy/goblin/troops/torch/blue/torch_blue.json",
+    textureURL: "terrain/enemy/goblin/Troops/Torch/Blue/Torch_Blue.png",
+    atlasURL: "terrain/enemy/goblin/Troops/Torch/Blue/Torch_Blue.json",
   },
 ];
 
@@ -51,14 +51,14 @@ export const SPRITESHEETS = [
   // Goblin TNT Blue variation
   {
     key: "enemy_goblin_tnt_blue",
-    path: "terrain/enemy/goblin/troops/tnt/blue/tnt_blue.png",
+    path: "terrain/enemy/goblin/Troops/TNT/Blue/TNT_Blue.png",
     frameWidth: 192,
     frameHeight: 192,
   },
   // Goblin Barrel Blue variation
   {
     key: "enemy_goblin_barrel_blue",
-    path: "terrain/enemy/goblin/troops/barrel/blue/barrel_blue.png",
+    path: "terrain/enemy/goblin/Troops/Barrel/Blue/Barrel_Blue.png",
     frameWidth: 128,
     frameHeight: 128,
   },
@@ -72,7 +72,7 @@ export const SPRITESHEETS = [
   // Dynamite projectile spritesheet
   {
     key: "dynamite_projectile",
-    path: "terrain/enemy/goblin/troops/tnt/dynamite/dynamite.png",
+    path: "terrain/enemy/goblin/Troops/TNT/Dynamite/Dynamite.png",
     frameWidth: 64,
     frameHeight: 64,
   },
@@ -88,7 +88,7 @@ export const TILESETS = [
   {
     tiledName: "trees", // updated to match spawn.json
     key: "trees",
-    path: "terrain/master/trees.png",
+    path: "terrain/master/Trees.png",
   },
   {
     tiledName: "enemybuildings",
@@ -98,14 +98,14 @@ export const TILESETS = [
   {
     tiledName: "master_clouds",
     key: "master_clouds",
-    path: "terrain/deco/clouds/master_clouds.png",
+    path: "terrain/deco/Clouds/master_clouds.png",
   },
 
   //Terrain/Bridge/
   {
     tiledName: "bridge_all", // updated to match spawn.json
     key: "bridge",
-    path: "terrain/bridge/bridge_all.png",
+    path: "terrain/Bridge/Bridge_All.png",
   },
 
   // Additional tilesets for spawn.json
@@ -117,12 +117,12 @@ export const TILESETS = [
   {
     tiledName: "bushe1",
     key: "bushe1",
-    path: "terrain/deco/bushes/bushe1.png",
+    path: "terrain/deco/Bushes/Bushe1.png",
   },
   {
     tiledName: "Shadow",
     key: "shadow",
-    path: "terrain/master/shadow.png",
+    path: "terrain/master/Shadow.png",
   },
   {
     tiledName: "master_tileset_buildings",
