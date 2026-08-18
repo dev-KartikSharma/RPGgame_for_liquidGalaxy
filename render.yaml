@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: rpg-game-liquid-galaxy
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 8128
+      - key: NODE_ENV
+        value: production
