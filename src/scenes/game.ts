@@ -170,21 +170,15 @@ export default class MainScene extends Phaser.Scene {
 
   private calculateLGOffset = () => {
     if (!this.cameras || !this.cameras.main) return;
-    const half = Math.floor(this.screenAmount / 2);
-    const leftScreen = half + 2;
-    const rightScreen = half + 1;
+    const mid = Math.floor(this.screenAmount / 2);
 
     let screenMultiplier = 0;
     if (this.screenNum === 1) {
       screenMultiplier = 0;   // Center (Master)
-    } else if (this.screenNum === leftScreen) {
-      screenMultiplier = -1;  // Left
-    } else if (this.screenNum === rightScreen) {
-      screenMultiplier = 1;   // Right
-    } else if (this.screenNum === 2) {
-      screenMultiplier = -half; // Far Left
-    } else if (this.screenNum === this.screenAmount) {
-      screenMultiplier = half;  // Far Right
+    } else if (this.screenNum >= 2 && this.screenNum <= mid + 1) {
+      screenMultiplier = this.screenNum - 1; // Right side screens (e.g. S=2 -> 1, S=3 -> 2)
+    } else if (this.screenNum >= mid + 2 && this.screenNum <= this.screenAmount) {
+      screenMultiplier = -(this.screenAmount - this.screenNum + 1); // Left side screens (e.g. S=4 -> -2, S=5 -> -1)
     } else {
       screenMultiplier = 0;
     }
