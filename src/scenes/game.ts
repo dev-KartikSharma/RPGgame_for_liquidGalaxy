@@ -176,9 +176,9 @@ export default class MainScene extends Phaser.Scene {
     if (this.screenNum === 1) {
       screenMultiplier = 0;   // Center (Master)
     } else if (this.screenNum >= 2 && this.screenNum <= mid + 1) {
-      screenMultiplier = this.screenNum - 1; // Right side screens (e.g. S=2 -> 1, S=3 -> 2)
+      screenMultiplier = -(this.screenNum - 1); // Left side screens (e.g. S=2 -> -1, S=3 -> -2)
     } else if (this.screenNum >= mid + 2 && this.screenNum <= this.screenAmount) {
-      screenMultiplier = -(this.screenAmount - this.screenNum + 1); // Left side screens (e.g. S=4 -> -2, S=5 -> -1)
+      screenMultiplier = this.screenAmount - this.screenNum + 1; // Right side screens (e.g. S=4 -> 2, S=5 -> 1)
     } else {
       screenMultiplier = 0;
     }

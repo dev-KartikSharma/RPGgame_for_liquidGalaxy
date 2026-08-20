@@ -930,21 +930,21 @@ async function runTier3() {
       const zoom = 2;
       const visibleWorldWidth = cameraWidth / zoom; // 640px
 
-      // 5-Screen Rig Layout Multipliers (Clockwise: lg4 - lg5 - lg1 - lg2 - lg3)
+      // 5-Screen Rig Layout Multipliers (Physical Layout: lg3 - lg2 - lg1 - lg5 - lg4)
       const fiveScreenMultipliers = {
         1: 0,   // Center (Master)
-        2: 1,   // Right
-        3: 2,   // Far Right
-        4: -2,  // Far Left
-        5: -1,  // Left
+        2: -1,  // Left 1
+        3: -2,  // Far Left
+        4: 2,   // Far Right
+        5: 1,   // Right 1
       };
 
       const expectedOffsets = {
         1: 0,
-        2: 640,
-        3: 1280,
-        4: -1280,
-        5: -640,
+        2: -640,
+        3: -1280,
+        4: 1280,
+        5: 640,
       };
 
       for (const [screenNum, mult] of Object.entries(fiveScreenMultipliers)) {

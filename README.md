@@ -297,9 +297,9 @@ Liquid Galaxy is a multi-screen panoramic display installation. *The Shattered B
           |                    |                                           |                    |
           v                    v                                           v                    v
   +---------------+    +---------------+                           +---------------+    +---------------+
-  |    SLAVE 4    |    |    SLAVE 5    |       MASTER SCREEN       |    SLAVE 2    |    |    SLAVE 3    |
+  |    SLAVE 3    |    |    SLAVE 2    |       MASTER SCREEN       |    SLAVE 5    |    |    SLAVE 4    |
   |  (Far Left)   |    |   (Left 1)    |         (Center)          |   (Right 1)   |    |  (Far Right)  |
-  |  ?screen=4    |    |  ?screen=5    |        ?screen=1          |  ?screen=2    |    |  ?screen=3    |
+  |  ?screen=3    |    |  ?screen=2    |        ?screen=1          |  ?screen=5    |    |  ?screen=4    |
   | Offset: -2W   |    | Offset: -1W   |        Offset: 0          | Offset: +1W   |    | Offset: +2W   |
   | (HUD Hidden)  |    | (HUD Hidden)  |      (Full HUD & AI)      | (HUD Hidden)  |    | (HUD Hidden)  |
   +---------------+    +---------------+                           +---------------+    +---------------+
@@ -319,10 +319,10 @@ $$\text{camera.setFollowOffset}(\text{lgOffsetX}, 0)$$
 
 #### Multiplier Lookup Table (5-Screen Rig):
 - **Screen 1 (Master / Center)**: $\text{Multiplier} = 0 \implies \text{Offset} = 0\text{px}$
-- **Screen 2 (Right 1)**: $\text{Multiplier} = +1 \implies \text{Offset} = +1 \times \text{visibleWorldWidth}$
-- **Screen 3 (Far Right)**: $\text{Multiplier} = +2 \implies \text{Offset} = +2 \times \text{visibleWorldWidth}$
-- **Screen 4 (Far Left)**: $\text{Multiplier} = -2 \implies \text{Offset} = -2 \times \text{visibleWorldWidth}$
-- **Screen 5 (Left 1)**: $\text{Multiplier} = -1 \implies \text{Offset} = -1 \times \text{visibleWorldWidth}$
+- **Screen 2 (Left 1)**: $\text{Multiplier} = -1 \implies \text{Offset} = -1 \times \text{visibleWorldWidth}$
+- **Screen 3 (Far Left)**: $\text{Multiplier} = -2 \implies \text{Offset} = -2 \times \text{visibleWorldWidth}$
+- **Screen 4 (Far Right)**: $\text{Multiplier} = +2 \implies \text{Offset} = +2 \times \text{visibleWorldWidth}$
+- **Screen 5 (Right 1)**: $\text{Multiplier} = +1 \implies \text{Offset} = +1 \times \text{visibleWorldWidth}$
 
 ---
 
@@ -371,8 +371,8 @@ npm run dev
 
 Open your browser to:
 - **Master Screen**: [http://localhost:5173?screen=1](http://localhost:5173?screen=1) (or simply [http://localhost:5173](http://localhost:5173))
-- **Left Slave Screen**: [http://localhost:5173?screen=5](http://localhost:5173?screen=5)
-- **Right Slave Screen**: [http://localhost:5173?screen=2](http://localhost:5173?screen=2)
+- **Left Slave Screen**: [http://localhost:5173?screen=2](http://localhost:5173?screen=2)
+- **Right Slave Screen**: [http://localhost:5173?screen=5](http://localhost:5173?screen=5)
 
 ---
 
@@ -409,9 +409,9 @@ Runs standalone with full HUD, physics simulation, keyboard controls, and center
 ---
 
 ### 3-Display Panoramic Rig
-- **Left Display**: `http://localhost:5173/?screen=5&screens=3` (Offset: $-1\times \text{Width}$)
+- **Left Display**: `http://localhost:5173/?screen=2&screens=3` (Offset: $-1\times \text{Width}$)
 - **Center Display (Master)**: `http://localhost:5173/?screen=1&screens=3` (Offset: $0$)
-- **Right Display**: `http://localhost:5173/?screen=2&screens=3` (Offset: $+1\times \text{Width}$)
+- **Right Display**: `http://localhost:5173/?screen=3&screens=3` (Offset: $+1\times \text{Width}$)
 
 ---
 
@@ -419,17 +419,17 @@ Runs standalone with full HUD, physics simulation, keyboard controls, and center
 
 ```
 ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-│   SCREEN 4   │ │   SCREEN 5   │ │   SCREEN 1   │ │   SCREEN 2   │ │   SCREEN 3   │
+│   SCREEN 3   │ │   SCREEN 2   │ │   SCREEN 1   │ │   SCREEN 5   │ │   SCREEN 4   │
 │   Far Left   │ │    Left 1    │ │ Master Center│ │   Right 1    │ │  Far Right   │
-│ ?screen=4    │ │ ?screen=5    │ │ ?screen=1    │ │ ?screen=2    │ │ ?screen=3    │
+│ ?screen=3    │ │ ?screen=2    │ │ ?screen=1    │ │ ?screen=5    │ │ ?screen=4    │
 └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘
 ```
 
-1. **Screen 4 (Far Left)**: `http://<MASTER_IP>:8128/?screen=4`
-2. **Screen 5 (Left 1)**: `http://<MASTER_IP>:8128/?screen=5`
+1. **Screen 3 (Far Left)**: `http://<MASTER_IP>:8128/?screen=3`
+2. **Screen 2 (Left 1)**: `http://<MASTER_IP>:8128/?screen=2`
 3. **Screen 1 (Master / Center)**: `http://<MASTER_IP>:8128/?screen=1`
-4. **Screen 2 (Right 1)**: `http://<MASTER_IP>:8128/?screen=2`
-5. **Screen 3 (Far Right)**: `http://<MASTER_IP>:8128/?screen=3`
+4. **Screen 5 (Right 1)**: `http://<MASTER_IP>:8128/?screen=5`
+5. **Screen 4 (Far Right)**: `http://<MASTER_IP>:8128/?screen=4`
 
 ---
 
@@ -442,11 +442,11 @@ For Liquid Galaxy multi-rig installations on Linux / Ubuntu machines, use the fo
 # Liquid Galaxy 5-Screen Launch Script
 MASTER_IP="127.0.0.1:8128"
 
-google-chrome --kiosk --user-data-dir=/tmp/lg_screen_4 --window-position=0,0 "http://${MASTER_IP}/?screen=4" &
-google-chrome --kiosk --user-data-dir=/tmp/lg_screen_5 --window-position=1920,0 "http://${MASTER_IP}/?screen=5" &
+google-chrome --kiosk --user-data-dir=/tmp/lg_screen_3 --window-position=0,0 "http://${MASTER_IP}/?screen=3" &
+google-chrome --kiosk --user-data-dir=/tmp/lg_screen_2 --window-position=1920,0 "http://${MASTER_IP}/?screen=2" &
 google-chrome --kiosk --user-data-dir=/tmp/lg_screen_1 --window-position=3840,0 "http://${MASTER_IP}/?screen=1" &
-google-chrome --kiosk --user-data-dir=/tmp/lg_screen_2 --window-position=5760,0 "http://${MASTER_IP}/?screen=2" &
-google-chrome --kiosk --user-data-dir=/tmp/lg_screen_3 --window-position=7680,0 "http://${MASTER_IP}/?screen=3" &
+google-chrome --kiosk --user-data-dir=/tmp/lg_screen_5 --window-position=5760,0 "http://${MASTER_IP}/?screen=5" &
+google-chrome --kiosk --user-data-dir=/tmp/lg_screen_4 --window-position=7680,0 "http://${MASTER_IP}/?screen=4" &
 ```
 
 ---
