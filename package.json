@@ -3,11 +3,14 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "license": "MIT",
   "scripts": {
     "dev": "concurrently \"node server.js\" \"vite --host\"",
     "build": "tsc && vite build",
     "start": "node server.js",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "copy-assets": "node scripts/copy_assets.cjs",
+    "audit": "node scripts/audit_verifier.cjs"
   },
   "dependencies": {
     "concurrently": "^10.0.3",
