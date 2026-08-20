@@ -58,6 +58,11 @@ async function audit1_BugCatalog() {
   const bugReportPath = path.join(ROOT_DIR, "BUG_AUDIT_REPORT.md");
   const projectPath = path.join(ROOT_DIR, "PROJECT.md");
 
+  if (!fs.existsSync(bugReportPath) && !fs.existsSync(projectPath)) {
+    console.log("  No BUG_AUDIT_REPORT.md or PROJECT.md found (clean repository mode). Skipping catalog check.");
+    return;
+  }
+
   let content = "";
   if (fs.existsSync(bugReportPath)) {
     content += fs.readFileSync(bugReportPath, "utf8");
