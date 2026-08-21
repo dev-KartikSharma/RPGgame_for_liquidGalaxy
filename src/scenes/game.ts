@@ -33,6 +33,7 @@ export default class MainScene extends Phaser.Scene {
   private towerMsgShown: boolean = false;
   private isDialogActive: boolean = false;
   private introPlayed: boolean = false;
+  private lastEmitTime: number = 0;
   private castleLocation: { x: number; y: number } | null = null;
   private towerLocation: { x: number; y: number } | null = null;
 
@@ -258,6 +259,7 @@ export default class MainScene extends Phaser.Scene {
       this.castleMsgShown = false;
       this.towerMsgShown = false;
       this.introPlayed = false;
+      this.lastEmitTime = 0;
     }
     
     if (data && data.spawnName) {
@@ -543,7 +545,13 @@ export default class MainScene extends Phaser.Scene {
     if (!this.isMaster) {
       this.player.isLGSlave = true;
       this.socket.on("player_update", (data: any) => {
-        this.player.setPosition(data.x, data.y);
+        // Snap position on first update to avoid start at 0,0
+        if ((this.player as any).targetX === undefined) {
+          this.player.setPosition(data.x, data.y);
+        }
+        (this.player as any).targetX = data.x;
+        (this.player as any).targetY = data.y;
+
         if (data.anim) {
           this.player.play(data.anim, true);
         }
@@ -560,6 +568,8 @@ export default class MainScene extends Phaser.Scene {
           (enemy as any).isLGSlave = true;
           enemy.id = data.id;
           enemy.setDepth(499);
+          (enemy as any).targetX = data.x;
+          (enemy as any).targetY = data.y;
           this.enemies.push(enemy);
         }
 
@@ -577,7 +587,8 @@ export default class MainScene extends Phaser.Scene {
               delete this.enemiesLastEmitData[data.id];
             });
           } else if (!enemy.isDead) {
-            enemy.setPosition(data.x, data.y);
+            (enemy as any).targetX = data.x;
+            (enemy as any).targetY = data.y;
             if (data.anim) {
               enemy.play(data.anim, true);
             }
@@ -897,30 +908,6 @@ export default class MainScene extends Phaser.Scene {
         });
       }
 
-      const currentAnim = this.player.anims.currentAnim?.key;
-      const roundedPlayerX = Math.round(this.player.x * 10) / 10;
-      const roundedPlayerY = Math.round(this.player.y * 10) / 10;
-
-      // send sync data if changed
-      if (
-        roundedPlayerX !== this.lastEmitData.x ||
-        roundedPlayerY !== this.lastEmitData.y ||
-        currentAnim !== this.lastEmitData.anim ||
-        this.player.flipX !== this.lastEmitData.flipX
-      ) {
-        const emitData = {
-          x: roundedPlayerX,
-          y: roundedPlayerY,
-          anim: currentAnim,
-          flipX: this.player.flipX,
-        };
-
-        if (this.socket) {
-          this.socket.emit("player_update", emitData);
-        }
-        this.lastEmitData = emitData;
-      }
-
       this.npcs.forEach((npc) => {
         npc.update();
       });
@@ -929,46 +916,97 @@ export default class MainScene extends Phaser.Scene {
         if (enemy.active && !enemy.isDead) {
           enemy.update(time);
         }
+      });
 
-        const enemyAnim = enemy.anims.currentAnim?.key;
-        const lastData = this.enemiesLastEmitData[enemy.id] || {};
-        const roundedEnemyX = Math.round(enemy.x * 10) / 10;
-        const roundedEnemyY = Math.round(enemy.y * 10) / 10;
+      // Throttle socket sync emissions to 30 FPS to save network bandwidth and prevent lag
+      if (time > (this.lastEmitTime || 0) + 33) {
+        this.lastEmitTime = time;
 
+        const currentAnim = this.player.anims.currentAnim?.key;
+        const roundedPlayerX = Math.round(this.player.x * 10) / 10;
+        const roundedPlayerY = Math.round(this.player.y * 10) / 10;
+
+        // send sync data if changed
         if (
-          roundedEnemyX !== lastData.x ||
-          roundedEnemyY !== lastData.y ||
-          enemyAnim !== lastData.anim ||
-          enemy.flipX !== lastData.flipX ||
-          enemy.isDead !== lastData.isDead
+          roundedPlayerX !== this.lastEmitData.x ||
+          roundedPlayerY !== this.lastEmitData.y ||
+          currentAnim !== this.lastEmitData.anim ||
+          this.player.flipX !== this.lastEmitData.flipX
         ) {
-          const enemyEmitData = {
-            id: enemy.id,
-            x: roundedEnemyX,
-            y: roundedEnemyY,
-            texture: enemy.texture.key,
-            anim: enemyAnim,
-            flipX: enemy.flipX,
-            isDead: enemy.isDead,
+          const emitData = {
+            x: roundedPlayerX,
+            y: roundedPlayerY,
+            anim: currentAnim,
+            flipX: this.player.flipX,
           };
 
-          // emit it
           if (this.socket) {
-            this.socket.emit("enemy_update", enemyEmitData);
+            this.socket.emit("player_update", emitData);
           }
-          this.enemiesLastEmitData[enemy.id] = enemyEmitData;
+          this.lastEmitData = emitData;
         }
-      });
+
+        this.enemies.forEach((enemy) => {
+          const enemyAnim = enemy.anims.currentAnim?.key;
+          const lastData = this.enemiesLastEmitData[enemy.id] || {};
+          const roundedEnemyX = Math.round(enemy.x * 10) / 10;
+          const roundedEnemyY = Math.round(enemy.y * 10) / 10;
+
+          if (
+            roundedEnemyX !== lastData.x ||
+            roundedEnemyY !== lastData.y ||
+            enemyAnim !== lastData.anim ||
+            enemy.flipX !== lastData.flipX ||
+            enemy.isDead !== lastData.isDead
+          ) {
+            const enemyEmitData = {
+              id: enemy.id,
+              x: roundedEnemyX,
+              y: roundedEnemyY,
+              texture: enemy.texture.key,
+              anim: enemyAnim,
+              flipX: enemy.flipX,
+              isDead: enemy.isDead,
+            };
+
+            // emit it
+            if (this.socket) {
+              this.socket.emit("enemy_update", enemyEmitData);
+            }
+            this.enemiesLastEmitData[enemy.id] = enemyEmitData;
+          }
+        });
+      }
 
       // remove dead enemies and clean up emit cache AFTER emitting death update
       this.enemies = this.enemies.filter((enemy) => {
         if (!enemy.active || enemy.isDead) {
+          const lastData = this.enemiesLastEmitData[enemy.id] || {};
+          if (!lastData.isDead) {
+            return true; // Keep in array so the next throttled frame can emit its death status
+          }
           delete this.enemiesLastEmitData[enemy.id];
           return false;
         }
         return true;
       });
     } else {
+      // Interpolate player position on Slave display to keep movement fluid
+      if (this.player && (this.player as any).targetX !== undefined) {
+        const lerpFactor = 0.15;
+        this.player.x += ((this.player as any).targetX - this.player.x) * lerpFactor;
+        this.player.y += ((this.player as any).targetY - this.player.y) * lerpFactor;
+      }
+
+      // Interpolate enemy positions on Slave display
+      this.enemies.forEach((enemy) => {
+        if (enemy && (enemy as any).targetX !== undefined && !enemy.isDead) {
+          const lerpFactor = 0.15;
+          enemy.x += ((enemy as any).targetX - enemy.x) * lerpFactor;
+          enemy.y += ((enemy as any).targetY - enemy.y) * lerpFactor;
+        }
+      });
+
       // Periodic cleanup of inactive enemies on Slave
       this.enemies = this.enemies.filter((enemy) => enemy && enemy.active && !enemy.isDead);
     }
