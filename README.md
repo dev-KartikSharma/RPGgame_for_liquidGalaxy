@@ -358,7 +358,7 @@ The master node emits lightweight state updates over Socket.io at 60 Hz to ensur
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/LiquidGalaxyLAB/RPGgame_for_liquidGalaxy.git
+git clone https://github.com/dev-KartikSharma/RPGgame_for_liquidGalaxy
 cd RPGgame_for_liquidGalaxy
 
 # 2. Install dependencies
